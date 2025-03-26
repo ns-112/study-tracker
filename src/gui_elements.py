@@ -1,71 +1,57 @@
 import pygame
 import os
 import numpy as np
+import pyautogui
 
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
 textures_dir = f'{project_dir}\\textures\\'
 
+class gui_screen:
+    def __init__(self, screen, page = 0):
+        self.page = page
+        self.buttons = {}
+        self.surface = screen
+
+    def create_button(self, callback, texture = "test_button", x = pyautogui.size().width // 2, y = pyautogui.size().height // 2):
+        button = pygame.image.load(f'{textures_dir}{texture}.png')
+        rect = button.get_rect()
+        rect.topleft = (x, y)
+        self.buttons[texture] = [button, 0, False, callback]
+    
+    def update(self, dt, event):
+        
+        #render
+        self.surface.fill((0, 0, 0))
+        for name, data in self.buttons.items():
+            self.surface.blit(data[0], data[0].get_rect())
+
+        #hover
+        for name, data in self.buttons.items():
+            if data[0].get_rect().collidepoint(pygame.mouse.get_pos()):
+                data[2] = True
+            else:
+                data[2] = False
+            
+        for name, data in self.buttons.items():
+            if data[2]:
+                if data[1] < 1:
+                    data[1] += dt
+            else:
+                if data[1] > 0:
+                    data[1] -= dt
+        
+        #click
+        for name, data in self.buttons.items():
+            if event and data[2]:
+                data[3]()
+
+
 screens = {
     "home": 0,
     "settings": 1
 }
-
-button_textures = {
-    "exit": f'{textures_dir}exit.png'
-}
-
-exit = pygame.image.load(button_textures["exit"])
-
-
-buttons = [
-    exit
-]
-
-button_matches = {
-    exit: "exit"
-}
-
-
-def close():
-    print("Button clicked!")
-    return True  
-
-
-def draw_gui(screen, id="home"):
-    screen.fill((0, 0, 0))
-    id = screens[id]
-    match id:
-        case 0:
-            pass
-    for b in buttons:
-        screen.blit(b, b.get_rect())
-        b.get_rect().move(40, 40)
-
-
-def on_hover(mouse, event, deltatime):
-    for button in buttons:
-        
-
-        match button_matches[button]:
-            
-            case "exit":
-                if check_button_clicked(button, close, mouse, event, deltatime):
-                    return True  
-    return False 
-
-
-def check_button_clicked(button, callback, mouse, event, dt):
-    if button.get_rect().collidepoint(mouse):  
-        
-        if event.type == pygame.MOUSEBUTTONDOWN:  
-            return callback()  
-    return False  
-
-
-
-
 
 #animations
 def ease_out_sine(t):

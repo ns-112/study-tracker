@@ -27,10 +27,22 @@ window = Window.from_display_module()
 clock = pygame.time.Clock()
 
 
-
+#lerp value
+t = 0
+#delta time
+dt = 0
+#total time
 elapsed_time = 0
+#self explanitory
 transition_time = 0
+
 running = True
+opening = False
+closing = False
+commit_close = False
+commit_final_close = False
+
+click_event = False
 
 timeline = tl.timeline()
 timeline.add_event(0.1, "start_open")
@@ -39,42 +51,54 @@ timeline.add_event(-1, "start_close") #set to -1 to unbind it
 timeline.add_event(-1, "end_close") #set to -1 to unbind it
 
 
+#button callbacks
+def b_close():
+    timeline.events["start_close"] = 0.1 + elapsed_time
+    timeline.events["end_close"] = 0.6 + elapsed_time
+    global commit_close
+    commit_close = True
 
 
-opening = False
-closing = False
-commit_close = False
-commit_final_close = False
-#lerp value
-t = 0
-dt = 0
+#screens
+home = ge.gui_screen(screen, 0)
+
+
+#buttons
+home.create_button(b_close, "exit", 0, 0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 while running:
-    loop_count = 0
-    mouse = pygame.mouse.get_pos()
-    ge.draw_gui(screen, "home")
+   
 
 
 
     for event in pygame.event.get():
-        
-        if (loop_count == 0):
-            
-            commit_close = ge.on_hover(mouse, event, dt)
-            
-            if (commit_close == True): 
-                
-                timeline.events["start_close"] = 0.1 + elapsed_time
-                timeline.events["end_close"] = 0.6 + elapsed_time
-        if event.type == pygame.QUIT:
+        if (event.type == pygame.MOUSEBUTTONDOWN):
+            click_event = True
+        else:
+            click_event = False
+        if (event.type == pygame.QUIT):
             running = False
+    
+    home.update(dt, click_event)
 
-        
-        loop_count += 1
-            
-    if commit_close:
-        commit_final_close = True
 
 
     
@@ -88,11 +112,11 @@ while running:
     if (elapsed_time >= timeline.events["start_open"] and elapsed_time <= timeline.events["end_open"]):
         opening = True
         transition_time += dt
-    elif (elapsed_time > timeline.events["end_open"] and commit_final_close != True):
+    elif (elapsed_time > timeline.events["end_open"] and not commit_close):
         opening = False
         transition_time = 0
     
-    if (elapsed_time >= timeline.events["start_close"] and elapsed_time <= timeline.events["end_close"] and commit_final_close == True):
+    if (elapsed_time >= timeline.events["start_close"] and elapsed_time <= timeline.events["end_close"] and commit_close):
         
         closing = True
         transition_time += dt
@@ -103,7 +127,7 @@ while running:
     
 
     if closing:
-        print(transition_time)  
+        print(x)  
         t = min(transition_time / (timeline.events["end_close"] - timeline.events["start_close"]), 1)
         x = int((1 - ease_in_back(t)) * WIDTH)
         if (abs(t + 0.03) >= 1): 
