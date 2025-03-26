@@ -126,8 +126,7 @@ while running:
         
     
 
-    if closing:
-        print(x)  
+    if closing: 
         t = min(transition_time / (timeline.events["end_close"] - timeline.events["start_close"]), 1)
         x = int((1 - ease_in_back(t)) * WIDTH)
         if (abs(t + 0.03) >= 1): 
