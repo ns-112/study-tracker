@@ -2,7 +2,7 @@ import pygame
 import os
 import pyautogui
 from pygame._sdl2.video import Window
-import gui_elements as ge
+import GUIE
 import timeline as tl
 
 # Outback easing
@@ -60,7 +60,7 @@ def b_close():
 
 
 #screens
-home = ge.gui_screen(screen, 0)
+home = GUIE.gui_screen(screen, 0)
 
 
 #buttons
@@ -86,7 +86,7 @@ home.create_button(b_close, "exit", 0, 0)
 
 while running:
    
-
+    
 
 
     for event in pygame.event.get():
