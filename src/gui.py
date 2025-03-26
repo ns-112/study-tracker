@@ -43,6 +43,7 @@ commit_close = False
 commit_final_close = False
 
 click_event = False
+release_event = True
 
 timeline = tl.timeline()
 timeline.add_event(0.1, "start_open")
@@ -58,13 +59,17 @@ def b_close():
     global commit_close
     commit_close = True
 
+def b_test():
+    print("button clicked!")
+
 
 #screens
 home = GUIE.gui_screen(screen, 0)
 
 
 #buttons
-home.create_button(b_close, "exit", 0, 0)
+home.create_button(b_close, "exit")
+home.create_button(b_test, x = 200)
 
 
 
@@ -90,17 +95,22 @@ while running:
 
 
     for event in pygame.event.get():
-        if (event.type == pygame.MOUSEBUTTONDOWN):
+        if (event.type == pygame.MOUSEBUTTONDOWN and not click_event):
             click_event = True
-        else:
+            release_event = False
+            break
+        elif (event.type == pygame.MOUSEBUTTONUP):
+            release_event = True
             click_event = False
+            break
+        
         if (event.type == pygame.QUIT):
             running = False
     
-    home.update(dt, click_event)
+    home.update(dt, click_event, release_event)
 
 
-
+    
     
     
     
