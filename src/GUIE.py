@@ -9,10 +9,11 @@ project_dir = os.path.dirname(src_dir)
 textures_dir = f'{project_dir}\\textures\\'
 
 class gui_screen:
-    def __init__(self, screen, page = 0):
+    def __init__(self, screen, page = 0, active = True):
         self.page = page
         self.buttons = {}
         self.surface = screen
+        self.active = active
 
     def create_button(
             self, 
@@ -41,7 +42,7 @@ class gui_screen:
             y = size[1]
         rect = pygame.Rect(abs(x), abs(y), size[0], size[1])
         original_pos = (x, y)
-       
+        clicked_on = False
         scaled_rect = pygame.Rect(rect[2], rect[3], size[0], size[1])
 
         self.buttons[texture] = [
@@ -54,7 +55,8 @@ class gui_screen:
             button, #scalable coopy of texture,     6----pygame surface
             animation_length, #animation duration,  7----float
             scaled_rect, #scaled rect               8----pygame rect -> tuple 
-            original_pos #original pos              9----tuple
+            original_pos, #original pos             9----tuple
+            clicked_on  #clicked                    10---boolean
             ]
         
 
@@ -69,7 +71,7 @@ class gui_screen:
 
         #hover
         for name, data in self.buttons.items():
-            if pygame.Rect(data[9][0] - (data[6].get_rect()[2] //2), data[9][1] - (data[6].get_rect()[3] // 2), data[4][0], data[4][1]).collidepoint(pygame.mouse.get_pos()):
+            if pygame.Rect(data[9][0] - (data[6].get_rect()[2] //2), data[9][1] - (data[6].get_rect()[3] // 2), data[4][0], data[4][1]).collidepoint(pygame.mouse.get_pos()) and self.active:
                 data[2] = True
             else:
                 data[2] = False
@@ -99,12 +101,8 @@ class gui_screen:
 
         #click
         for name, data in self.buttons.items():
-            if event1 and data[2] and not event2:
-                event2 = True
-                data[2] = False
-                data[3]()
-
-
+            if (data[2] and (event1 or data[10])):
+                data[10] = True
                 t = data[1] / (data[7] / 10)
                 t = max(0, min(t, 1))  
                 eased_t = out_circ(t)
@@ -113,6 +111,17 @@ class gui_screen:
                 data[0] = pygame.transform.smoothscale(data[6], (int(new_width), int(new_height)))
                 data[8] = data[0].get_rect().center
                 data[5] = pygame.Rect((data[0].get_rect()[0] - (data[8][0])) + data[9][0], (data[0].get_rect()[1] - (data[8][1])) + data[9][1], data[5][2], data[5][3]) 
+                if event2:
+                    data[10] = False
+                    event2 = False
+                    event1 = False
+                    data[2] = False
+                    data[3]()
+            else:
+                data[10] = False
+
+
+                
 
 
 

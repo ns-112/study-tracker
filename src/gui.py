@@ -54,8 +54,9 @@ timeline.add_event(-1, "end_close") #set to -1 to unbind it
 
 #button callbacks
 def b_close():
-    timeline.events["start_close"] = 0.1 + elapsed_time
-    timeline.events["end_close"] = 0.6 + elapsed_time
+    home.active = False
+    timeline.events["start_close"] = 0.2 + elapsed_time
+    timeline.events["end_close"] = 0.7 + elapsed_time
     global commit_close
     commit_close = True
 
@@ -126,7 +127,7 @@ while running:
         opening = False
         transition_time = 0
     
-    if (elapsed_time >= timeline.events["start_close"] and elapsed_time <= timeline.events["end_close"] and commit_close):
+    if (elapsed_time >= timeline.events["start_close"] and elapsed_time <= timeline.events["end_close"] and commit_close and release_event):
         
         closing = True
         transition_time += dt
