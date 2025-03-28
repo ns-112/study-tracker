@@ -19,10 +19,11 @@ def eyeDetection():
             cv.rectangle(frame, (x,y), (w,h),color, thickness)
 
             landmarks= predictor(gray,face)
-            left_point = (landmarks.part(36).x,landmarks.part(36).y)
-            right_point = (landmarks.part(39).x,landmarks.part(39).y)
-            midpoint = int((landmarks.part(36).x + landmarks.part(39).x)/2), int((landmarks.part(36).y + landmarks.part(39).y)/2)
-            cv.circle(frame, midpoint, 1, color, thickness) 
+
+            rightEye_midpoint = int((landmarks.part(43).x + landmarks.part(46).x)/2), int((landmarks.part(43).y + landmarks.part(46).y)/2)
+            leftEye_midpoint = int((landmarks.part(36).x + landmarks.part(39).x)/2), int((landmarks.part(36).y + landmarks.part(39).y)/2)
+            cv.circle(frame, leftEye_midpoint, 1, color, thickness) 
+            cv.circle(frame, rightEye_midpoint, 1, color, thickness)
         cv.imshow('Camera',frame)
 
         if cv.waitKey(1) == ord('q'):
