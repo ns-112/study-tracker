@@ -2,7 +2,7 @@ import pygame
 import os
 import pyautogui
 from pygame._sdl2.video import Window
-import GUIE
+import guie
 import timeline as tl
 
 # Outback easing
@@ -63,18 +63,18 @@ def b_close():
 
 def b_test():
     print("popup")
-    home.create_basic_popup(800, 400, None, b_generic, button_1_name = "close", button_2_name = "note")
+    home.create_basic_popup(800, 400, None, b_generic, button_1_name = "close", button_2_name = "reveqbvrtbrwtbrtbrt")
 
 def b_generic():
     print("clicked")
 
 #screens
-home = GUIE.gui_screen(screen, 0)
+home = guie.gui_screen(screen, 0)
 
 
 #buttons
 home.create_button(b_close, "exit", x = 25, y = 25)
-home.create_button(b_test, "stock", column = 1, y = 200)
+home.create_button(b_test, "stock", x = 400, y = 100)
 
 
 
