@@ -22,7 +22,7 @@ src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
 
 pygame.init()
-screen = pygame.display.set_mode((0, HEIGHT), flags=pygame.RESIZABLE | pygame.NOFRAME) 
+screen = pygame.display.set_mode((0, HEIGHT), flags=pygame.RESIZABLE | pygame.NOFRAME | pygame.SRCALPHA) 
 window = Window.from_display_module()
 clock = pygame.time.Clock()
 
@@ -54,23 +54,27 @@ timeline.add_event(-1, "end_close") #set to -1 to unbind it
 
 #button callbacks
 def b_close():
-    home.active = False
-    timeline.events["start_close"] = 0.2 + elapsed_time
-    timeline.events["end_close"] = 0.7 + elapsed_time
-    global commit_close
-    commit_close = True
+    if (home.active):
+        home.active = False
+        timeline.events["start_close"] = 0.2 + elapsed_time
+        timeline.events["end_close"] = 0.7 + elapsed_time
+        global commit_close
+        commit_close = True
 
 def b_test():
-    print("button clicked!")
+    print("popup")
+    home.create_basic_popup(800, 400, None, b_generic, button_1_name = "close", button_2_name = "note")
 
+def b_generic():
+    print("clicked")
 
 #screens
 home = GUIE.gui_screen(screen, 0)
 
 
 #buttons
-home.create_button(b_close, "exit")
-home.create_button(b_test, x = 200)
+home.create_button(b_close, "exit", x = 25, y = 25)
+home.create_button(b_test, "stock", column = 1, y = 200)
 
 
 
@@ -109,7 +113,7 @@ while running:
             running = False
     
     home.update(dt, click_event, release_event)
-
+    home.update_active_popups(dt, click_event, release_event)
 
     
     
@@ -146,12 +150,18 @@ while running:
         window.position = (pyautogui.size().width // 2 - (x / 2), BASE_POS[1])
         if (x == 0):
             running = False  
+        
+        
 
     if opening:
         t = min(transition_time / (timeline.events["end_open"] - timeline.events["start_open"]), 1)  
         x = int(ease_out_back(t) * WIDTH)
         window.size = (x, HEIGHT)
         window.position = (pyautogui.size().width // 2 - (x / 2), BASE_POS[1])
+    
+    if (elapsed_time > timeline.events["end_close"] + 1 and commit_close and release_event):
+            print("closing failed due to unknown reason. forced close automatically.")
+            running = False
     
     elapsed_time += dt
     
