@@ -110,15 +110,14 @@ class gui_screen:
         button.blit(button_text_surface, (text_x, text_y))
 
         #set the center to 1/4 + 1/8 of popup   or 3/4 + 1/8 of popup
-        match index:
-            case 0:
+        if (index == 0):
                 button_rect = pygame.Rect(
                     ((pygame.Surface.get_width(popup) // 4) + (pygame.Surface.get_width(popup) // 8)) - (pygame.Surface.get_width(button) / 2) + pygame.Surface.get_width(popup) // 4, 
                     pygame.display.get_surface().get_size()[1] // 2 + pygame.display.get_surface().get_size()[1] // 6, 
                     button_width, 
                     button_height
                     )
-            case 1:
+        else:
                 button_rect = pygame.Rect(
                     (((pygame.Surface.get_width(popup) // 4) * 3) + (pygame.Surface.get_width(popup) // 8)) - (pygame.Surface.get_width(button) / 2)  + pygame.Surface.get_width(popup) // 4, 
                     pygame.display.get_surface().get_size()[1] // 2 + pygame.display.get_surface().get_size()[1] // 6, 
@@ -236,7 +235,7 @@ class gui_screen:
     
 
     
-    def update(self, dt, event1, event2, screen):
+    def update(self, dt, event1, event2, screen, frame = None, boxes = None):
         
         if self.page == screen:
             if (len(self.active_popups) == 0):
@@ -299,15 +298,14 @@ class gui_screen:
                     data[10] = False
 
 
-                    
-
-
-
             #render
             
             self.surface.fill((0, 0, 0))
-        
+            if self.page == 2 and frame is not None:
+                self.surface.blit(frame, (frame.get_width() / 2, frame.get_height() / 4))
+
             for name, data in self.buttons.items():
+                
                 self.surface.blit(data[0], data[5])
         
 
