@@ -15,10 +15,6 @@ def eyeDetection():
         gray = cv.equalizeHist(gray)
         faces=detector(gray)
         for face in faces:
-            x,y = face.left(), face.top()
-            w, h = face.right(), face.bottom()
-            cv.rectangle(frame, (x,y), (w,h),color, thickness)
-
             landmarks= predictor(gray,face)
             height,width, _= frame.shape
             mask = np.zeros((height,width), np.uint8)
@@ -28,18 +24,26 @@ def eyeDetection():
                                       (landmarks.part(39).x,landmarks.part(39).y),
                                       (landmarks.part(40).x,landmarks.part(40).y),
                                       (landmarks.part(41).x,landmarks.part(41).y)], np.int32)
+            rightEyeRegion = np.array([(landmarks.part(42).x,landmarks.part(42).y),
+                                      (landmarks.part(43).x,landmarks.part(43).y),
+                                      (landmarks.part(44).x,landmarks.part(44).y),
+                                      (landmarks.part(45).x,landmarks.part(45).y),
+                                      (landmarks.part(46).x,landmarks.part(46).y),
+                                      (landmarks.part(47).x,landmarks.part(47).y)], np.int32)
+
             cv.polylines(mask, [leftEyeRegion], True, 255, 2)
             cv.fillPoly(mask, [leftEyeRegion], 255)
-            left_eye = cv.bitwise_and(gray, gray, mask=mask)
+            cv.polylines(mask, [rightEyeRegion], True, 255, 2)
+            cv.fillPoly(mask, [rightEyeRegion], 255)
+            eyes = cv.bitwise_and(gray, gray, mask=mask)
             min_x = np.min(leftEyeRegion[:, 0])
             max_x = np.max(leftEyeRegion[:, 0])
             min_y = np.min(leftEyeRegion[:, 1])
             max_y = np.max(leftEyeRegion[:, 1])
-            gray_eye = left_eye[min_y: max_y, min_x: max_x]
+            gray_eye = eyes[min_y: max_y, min_x: max_x]
             _, threshold = cv.threshold(gray_eye, 70, 255, cv.THRESH_BINARY)
             threshold = cv.resize(threshold, None, fx=5, fy=5)
-            eye = cv.resize(gray_eye, None, fx=5, fy=5)
-            cv.imshow("Eye",left_eye)
+            cv.imshow("Eye",eyes)
  #       cv.imshow('Camera',frame)
 
         if cv.waitKey(1) == ord('q'):
