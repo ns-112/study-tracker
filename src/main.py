@@ -1,2 +1,2 @@
-import setup
-setup.eyeDetection()
+import tracker
+tracker.eyeDetection()
