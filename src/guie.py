@@ -9,64 +9,53 @@ src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
 textures_dir = f'{project_dir}\\textures\\'
 
+class button:
+    def __init__(self, texture, callback, x = 0, y = 0, column = 0, row = 0, scale = 1, animation_length = 0.5):
+        self.base = pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha()
+        self.scale = (pygame.Surface.get_width(self.base) * scale, pygame.Surface.get_height(self.base) * scale)
+        self.copy = self.base.convert_alpha()
+        self.lerp = 0
+        self.hover = False
+        self.callback = callback
+        self.length = animation_length
+
+        if x <= self.scale[0]:
+            x = (self.scale[0] / 2) + 5
+        if y <= self.scale[1]:
+            y = (self.scale[1] / 2) + 5
+
+        self.pos = (x, y)
+        self.rect = pygame.Rect(x, y, self.scale[0], self.scale[1])
+        self.clicked = False
+
+
+
 class gui_screen:
     def __init__(self, screen, page = 0, active = True):
         self.page = page
-        self.buttons = {}
+        self.buttons = []
         self.active_popups = {}
         self.surface = screen
         self.active = active
 
     def create_button(
             self, 
-            #base attributes
-            callback,                   #----method----
-            texture = "test_button",    #----string----
-            #layout options
-            x = 0,                      #----int-------
-            y = 0,                      #----int-------
-            column = 0,                 #----int-------
-            anchor = pygame.Rect.center,#----rect type-
-            row = 0,                    #----int-------
-            #animation/extra
-            scale = 1,                  #----float-----
-            animation_length = 0.5      #----float-----
+            
+            callback,                  
+            texture,    
+            
+            x = 0,                     
+            y = 0,                      
+            column = 0,                
+            row = 0,                   
+           
+            scale = 1,                  
+            animation_length = 0.5      
             ):
         
-        base_button = pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha()
-        button_size = (pygame.Surface.get_width(base_button) * scale, pygame.Surface.get_height(base_button) * scale)
-        button_rect = base_button.get_rect()
-        button_rect.width = button_size[0]
-        button_rect.height = button_size[1]
-
-        if x <= button_size[0]:
-            x = (button_size[0] / 2) + 5
-        if y <= button_size[1]:
-            y = (button_size[1] / 2) + 5
+        temp_button = button(texture, callback, x, y, column, row, scale, animation_length)
+        self.buttons.append(temp_button)
         
-        #if column > 0:
-           # last_key, last_value = list(self.buttons.items())[-1]
-            #x += last_value[5][0]
-
-        button_rect = pygame.Rect(abs(x), abs(y), button_size[0], button_size[1])
-        original_pos = (x, y)
-        clicked_on = False
-        scaled_rect = pygame.Rect(button_rect[2], button_rect[3], button_size[0], button_size[1])
-        copy_button = base_button
-
-        self.buttons[texture] = [
-            base_button, #base button,                   0----pygame surface
-            0, #lerp value,                         1----float
-            False, #is hovering,                    2----boolean
-            callback, #button callback,             3----method
-            button_size, #scale modifier,                  4----tuple
-            button_rect, #hover rect,                      5----pygame rect        
-            copy_button, #scalable coopy of texture,     6----pygame surface
-            animation_length, #animation duration,  7----float
-            scaled_rect, #scaled rect               8----pygame rect -> tuple 
-            original_pos, #original pos             9----tuple
-            clicked_on  #clicked                    10---boolean
-            ]
 
         
 
@@ -235,67 +224,70 @@ class gui_screen:
     
 
     
-    def update(self, dt, event1, event2, screen, frame = None, boxes = None):
+    def update(self, deltatime, event1, event2, screen, frame = None, boxes = None):
         
         if self.page == screen:
             if (len(self.active_popups) == 0):
                 #hover
-                for name, data in self.buttons.items():
-                    if pygame.Rect(data[9][0] - (data[6].get_rect()[2] //2), data[9][1] - (data[6].get_rect()[3] // 2), data[4][0], data[4][1]).collidepoint(pygame.mouse.get_pos()) and self.active:
-                        data[2] = True
+                for button in self.buttons:
+                    if pygame.Rect(button.pos[0], button.pos[1], button.scale[0], button.scale[1]).collidepoint(pygame.mouse.get_pos()) and self.active:
+                        button.hover = True
                     else:
-                        data[2] = False
+                        button.hover = False
                 
-                for name, data in self.buttons.items():
-                    if data[2]:
-                        if data[1] < (data[7] / 10):
+                for button in self.buttons:
+                    if button.hover:
+                        if button.lerp < (button.length / 10):
                         
-                            data[1] += dt
+                            button.lerp += deltatime
                     else:
-                        if data[1] > 0:
-                            data[1] -= dt
+                        if button.lerp > 0:
+                            button.lerp -= deltatime
             else: 
-                for name, data in self.buttons.items():
-                    data[2] = False
-                    if data[1] > 0:
-                            data[1] -= dt
+                for button in self.buttons:
+                    button.hover = False
+                    if button.lerp > 0:
+                            button.lerp -= deltatime
 
             #hover scale
-            for name, data in self.buttons.items():
-                t = data[1] / (data[7] / 10)
+            for button in self.buttons:
+                t = button.lerp / (button.length / 10)
                 t = max(0, min(t, 1))  
                 eased_t = out_circ(t)
-                new_width = lerp(data[4][0], data[4][0] * 1.25, eased_t)
-                new_height = lerp(data[4][1], data[4][1] * 1.25, eased_t)
-                data[0] = pygame.transform.smoothscale(data[6], (int(new_width), int(new_height)))
-                data[8] = data[0].get_rect().center
-                data[5] = pygame.Rect((data[0].get_rect()[0] - (data[8][0])) + data[9][0], (data[0].get_rect()[1] - (data[8][1])) + data[9][1], data[5][2], data[5][3]) 
-                
-                
+                new_width = lerp(button.scale[0], button.scale[0] * 1.25, eased_t)
+                new_height = lerp(button.scale[1], button.scale[1] * 1.25, eased_t)
+                button.base = pygame.transform.smoothscale(button.copy, (int(new_width), int(new_height)))
+                center = button.base.get_rect().center
+                button.rect = pygame.Rect(button.pos[0] - ((button.base.get_rect()[2] - button.scale[0]) / 2), button.pos[1] - ((button.base.get_rect()[3] - button.scale[1]) / 2), button.rect[2], button.rect[3])
+                #change in scale /2
+            
             if (len(self.active_popups) == 0):
                 #click
-                for name, data in self.buttons.items():
-                    if (data[2] and (event1 or data[10])):
-                        data[10] = True
-                        t = data[1] / (data[7] / 10)
+                for button in self.buttons:
+                    if (button.hover and (event1 or button.clicked)):
+                        button.clicked = True
+                        t = button.lerp / (button.length / 10)
                         t = max(0, min(t, 1))  
                         eased_t = out_circ(t)
-                        new_width = lerp(data[4][0], data[4][0] * 1.1, eased_t)
-                        new_height = lerp(data[4][1], data[4][1] * 1.1, eased_t)
-                        data[0] = pygame.transform.smoothscale(data[6], (int(new_width), int(new_height)))
-                        data[8] = data[0].get_rect().center
-                        data[5] = pygame.Rect((data[0].get_rect()[0] - (data[8][0])) + data[9][0], (data[0].get_rect()[1] - (data[8][1])) + data[9][1], data[5][2], data[5][3]) 
+                        new_width = lerp(button.scale[0], button.scale[0] * 1.1, eased_t)
+                        new_height = lerp(button.scale[1], button.scale[1] * 1.1, eased_t)
+                        button.base = pygame.transform.smoothscale(button.copy, (int(new_width), int(new_height)))
+                        center = button.base.get_rect().center
+                        button.rect = pygame.Rect(button.pos[0] - ((button.base.get_rect()[2] - button.scale[0]) / 2), button.pos[1] - ((button.base.get_rect()[3] - button.scale[1]) / 2), button.rect[2], button.rect[3])
+
                         if event2:
-                            data[10] = False
+                            button.clicked = False
                             event2 = False
                             event1 = False
-                            data[2] = False
-                            data[3]()
+                            button.hover = False
+                            button.callback()
                     else:
-                        data[10] = False
+                        button.clicked = False
             else:
-                for name, data in self.buttons.items():
-                    data[10] = False
+                for button in self.buttons:
+                    button.clicked = False
+                
+            
 
 
             #render
@@ -304,9 +296,9 @@ class gui_screen:
             if self.page == 2 and frame is not None:
                 self.surface.blit(frame, (frame.get_width() / 2, frame.get_height() / 4))
 
-            for name, data in self.buttons.items():
+            for button in self.buttons:
                 
-                self.surface.blit(data[0], data[5])
+                self.surface.blit(button.base, button.rect)
         
 
     def update_active_popups(self, dt, event1, event2):
