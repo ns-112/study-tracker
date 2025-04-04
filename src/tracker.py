@@ -24,17 +24,9 @@ def eyeDetection():
                                       (landmarks.part(39).x,landmarks.part(39).y),
                                       (landmarks.part(40).x,landmarks.part(40).y),
                                       (landmarks.part(41).x,landmarks.part(41).y)], np.int32)
-            rightEyeRegion = np.array([(landmarks.part(42).x,landmarks.part(42).y),
-                                      (landmarks.part(43).x,landmarks.part(43).y),
-                                      (landmarks.part(44).x,landmarks.part(44).y),
-                                      (landmarks.part(45).x,landmarks.part(45).y),
-                                      (landmarks.part(46).x,landmarks.part(46).y),
-                                      (landmarks.part(47).x,landmarks.part(47).y)], np.int32)
 
             cv.polylines(mask, [leftEyeRegion], True, 255, 2)
             cv.fillPoly(mask, [leftEyeRegion], 255)
-            cv.polylines(mask, [rightEyeRegion], True, 255, 2)
-            cv.fillPoly(mask, [rightEyeRegion], 255)
             eyes = cv.bitwise_and(gray, gray, mask=mask)
             min_x = np.min(leftEyeRegion[:, 0])
             max_x = np.max(leftEyeRegion[:, 0])
@@ -42,8 +34,27 @@ def eyeDetection():
             max_y = np.max(leftEyeRegion[:, 1])
             gray_eye = eyes[min_y: max_y, min_x: max_x]
             _, threshold = cv.threshold(gray_eye, 70, 255, cv.THRESH_BINARY)
+            height,width = threshold.shape
+            leftSideThreshold = threshold[0: height, 0: int(width/2)]
+            leftSideWhite = cv.countNonZero(leftSideThreshold)
+            rightSideThreshold = threshold[0: height, int(width/2): width]
+            rightSideWhite = cv.countNonZero(rightSideThreshold)
             threshold = cv.resize(threshold, None, fx=5, fy=5)
-            cv.imshow("Eye",eyes)
+
+            gazeRation = leftSideWhite/rightSideWhite
+
+            if (gazeRation > 3.5):
+                cv.putText(frame, str("Looking Left"), (50, 150), 5, 2, (0, 0, 255), 3)
+            elif (gazeRation < 1):
+                cv.putText(frame, str("Looking Right"), (50, 150), 5, 2, (0, 0, 255), 3)
+            else:
+                cv.putText(frame, str("Looking Center"), (50, 150), 5, 2, (0, 0, 255), 3)
+
+
+            cv.imshow("Fullb",frame)
+            cv.imshow("left",leftSideThreshold)
+            cv.imshow("right",rightSideThreshold)
+
  #       cv.imshow('Camera',frame)
 
         if cv.waitKey(1) == ord('q'):
