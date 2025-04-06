@@ -40,7 +40,6 @@ def eyeDetection():
             rightSideThreshold = threshold[0: height, int(width/2): width]
             rightSideWhite = cv.countNonZero(rightSideThreshold)
             threshold = cv.resize(threshold, None, fx=5, fy=5)
-
             gazeRation = leftSideWhite/rightSideWhite
 
             if (gazeRation > 3.5):
@@ -52,8 +51,6 @@ def eyeDetection():
 
 
             cv.imshow("Fullb",frame)
-            cv.imshow("left",leftSideThreshold)
-            cv.imshow("right",rightSideThreshold)
 
  #       cv.imshow('Camera',frame)
 
