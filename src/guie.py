@@ -4,29 +4,21 @@ import numpy as np
 import pyautogui
 from PIL import Image
 import io
+import animations as anim
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
 textures_dir = f'{project_dir}\\textures\\'
 
 class button:
-    def __init__(self, texture, callback, x = 0, y = 0, column = 0, row = 0, scale = 1, animation_length = 0.5):
-        self.base = pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha()
-        self.scale = (pygame.Surface.get_width(self.base) * scale, pygame.Surface.get_height(self.base) * scale)
-        self.copy = self.base.convert_alpha()
-        self.lerp = 0
+    def __init__(self, texture, screen, callback, x = 0, y = 0, column = 0, row = 0, animation_length = 0.15, scale_to = 1.15):
         self.hover = False
         self.callback = callback
         self.length = animation_length
-
-        if x <= self.scale[0]:
-            x = (self.scale[0] / 2) + 5
-        if y <= self.scale[1]:
-            y = (self.scale[1] / 2) + 5
-
-        self.pos = (x, y)
-        self.rect = pygame.Rect(x, y, self.scale[0], self.scale[1])
         self.clicked = False
+        self.animation_base = anim.object(pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha(), screen, (x, y))
+        self.scale_track = self.animation_base.addAnimationTrack("s", [[0, 1, 1], [animation_length, scale_to, scale_to, "out_circ"]], argument1 = self.hover, argument2 = self.clicked, argument3 = True)
+        
 
 
 
@@ -40,20 +32,18 @@ class gui_screen:
 
     def create_button(
             self, 
-            
+            screen,
             callback,                  
             texture,    
-            
             x = 0,                     
             y = 0,                      
             column = 0,                
             row = 0,                   
-           
-            scale = 1,                  
-            animation_length = 0.5      
+            scale = 1.15,                  
+            animation_length = 0.15      
             ):
         
-        temp_button = button(texture, callback, x, y, column, row, scale, animation_length)
+        temp_button = button(texture, screen, callback, x, y, column, row, animation_length, scale)
         self.buttons.append(temp_button)
         
 
@@ -230,38 +220,19 @@ class gui_screen:
             if (len(self.active_popups) == 0):
                 #hover
                 for button in self.buttons:
-                    if pygame.Rect(button.pos[0], button.pos[1], button.scale[0], button.scale[1]).collidepoint(pygame.mouse.get_pos()) and self.active:
+                    if button.animation_base.object_rect.collidepoint(pygame.mouse.get_pos()) and self.active:
                         button.hover = True
                     else:
                         button.hover = False
                 
                 for button in self.buttons:
-                    if button.hover:
-                        if button.lerp < (button.length / 10):
-                        
-                            button.lerp += deltatime
-                    else:
-                        if button.lerp > 0:
-                            button.lerp -= deltatime
-            else: 
-                for button in self.buttons:
-                    button.hover = False
-                    if button.lerp > 0:
-                            button.lerp -= deltatime
+                    button.animation_base.scale[0].argument1 = button.hover
+            
 
             #hover scale
-            for button in self.buttons:
-                t = button.lerp / (button.length / 10)
-                t = max(0, min(t, 1))  
-                eased_t = out_circ(t)
-                new_width = lerp(button.scale[0], button.scale[0] * 1.25, eased_t)
-                new_height = lerp(button.scale[1], button.scale[1] * 1.25, eased_t)
-                button.base = pygame.transform.smoothscale(button.copy, (int(new_width), int(new_height)))
-                center = button.base.get_rect().center
-                button.rect = pygame.Rect(button.pos[0] - ((button.base.get_rect()[2] - button.scale[0]) / 2), button.pos[1] - ((button.base.get_rect()[3] - button.scale[1]) / 2), button.rect[2], button.rect[3])
-                #change in scale /2
             
-            if (len(self.active_popups) == 0):
+            '''
+             if (len(self.active_popups) == 0):
                 #click
                 for button in self.buttons:
                     if (button.hover and (event1 or button.clicked)):
@@ -286,12 +257,14 @@ class gui_screen:
             else:
                 for button in self.buttons:
                     button.clicked = False
+            '''
+           
                 
             
 
 
             #render
-            
+            '''
             self.surface.fill((0, 0, 0))
             if self.page == 2 and frame is not None:
                 self.surface.blit(frame, (frame.get_width() / 2, frame.get_height() / 4))
@@ -299,6 +272,8 @@ class gui_screen:
             for button in self.buttons:
                 
                 self.surface.blit(button.base, button.rect)
+            '''
+            
         
 
     def update_active_popups(self, dt, event1, event2):

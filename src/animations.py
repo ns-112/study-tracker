@@ -30,10 +30,9 @@ class object:
     '''
     create and append new animation track
     '''
-    def addAnimationTrack(self, type, keyframes, start = (0, 0), loop = False):
-        anim = animation(type, keyframes, origin = start, does_loop = loop)
+    def addAnimationTrack(self, type, keyframes, start = (0, 0), loop = False, argument1 = False, argument2 = False, argument3 = False):
+        anim = animation(type, keyframes, origin = start, does_loop = loop, arg1 = argument1, arg2 = argument2, arg3 = argument3)
         self.addAnimationFromClass(anim)
-    
 
     '''
     add animation system to main object's list of references.
@@ -41,13 +40,13 @@ class object:
     allowing for some interesting animations
     '''
     def addAnimationFromClass(self, animation):
-        if (animation.anim_type == "position"):
+        if (animation.anim_type == "p"):
             self.position.append(animation)
-        if (animation.anim_type == "scale"):
+        if (animation.anim_type == "s"):
             self.scale.append(animation)
-        if (animation.anim_type == "rotation"):
+        if (animation.anim_type == "r"):
             self.rotation.append(animation)
-        if (animation.anim_type == "skew"):
+        if (animation.anim_type == "sk"):
             self.skew.append(animation)
         
     '''
@@ -55,19 +54,34 @@ class object:
     and renders object to screen
     '''
     def updateObject(self, deltaTime):
-        self.surface.fill((0,0,0))
+        self.surface.fill((0, 0, 0))
+        x_offset = self.object_rect[0]
+        y_offset = self.object_rect[1]
+        x = 0
+        y = 0
+        print(x_offset, y_offset)
         for system in self.position:
             self.animateSystem(deltaTime, system)
-            self.renderObject(system)
+            (x, y) = self.calculateTracks(system)
+            x_offset += x
+            y_offset += y
         for system in self.scale:
             self.animateSystem(deltaTime, system)
-            self.renderObject(system)
+            (x, y) = self.calculateTracks(system)
+            x_offset += x
+            y_offset += y
         for system in self.rotation:
             self.animateSystem(deltaTime, system)
-            self.renderObject(system)
+            (x, y) = self.calculateTracks(system)
+            x_offset += x
+            y_offset += y
         for system in self.skew:
             self.animateSystem(deltaTime, system)
-            self.renderObject(system)
+            (x, y) = self.calculateTracks(system)
+            x_offset += x
+            y_offset += y
+        
+        self.surface.blit(self.object, (x_offset, y_offset))
         
     '''
     update/linearly interpolate values based on keyframe's settings
@@ -77,7 +91,15 @@ class object:
         key = system.processed_keyframes[system.index]
         if (system.index < len(system.processed_keyframes)):
             
-            key.lerpval += deltaTime
+            if (system.argument3):
+                if (system.argument1):
+                    key.lerpval += deltaTime
+                elif (not system.argument1 and key.lerpval > 0):
+                    key.lerpval -= deltaTime
+            else:
+                key.lerpval += deltaTime
+                
+
             key.lerpval = min(key.lerpval, key.length) 
             if (system.index > 0):
                 t = key.lerpval / key.length
@@ -113,32 +135,92 @@ class object:
                 system.value = (key.x2, key.y2)
             else:
                 system.value = (system.lerp(key.x1, key.x2, t), system.lerp(key.y1, key.y2, t))
-            if key.lerpval >= key.length:
-                system.index += 1
-                if system.loop and system.index >= len(system.processed_keyframes):
-                    system.index = 0
-                    for keys in system.processed_keyframes:
-                        keys.lerpval = 0 
+
+            if (system.argument3):
+                if key.lerpval >= key.length and not system.argument1:
+                    system.index += 1
+                    if system.loop and system.index >= len(system.processed_keyframes):
+                        system.index = 0
+                        for keys in system.processed_keyframes:
+                            keys.lerpval = 0 
+            else:
+                if key.lerpval >= key.length:
+                    system.index += 1
+                    if system.loop and system.index >= len(system.processed_keyframes):
+                        system.index = 0
+                        for keys in system.processed_keyframes:
+                            keys.lerpval = 0 
+                if system.index >= len(system.processed_keyframes):
+                    system.index = len(system.processed_keyframes) - 1
+        
     
     '''
     draw image on screen based on
     what type it is
     '''
-    def renderObject(self, system):
-        if system.anim_type == "position":
-            system.surface.blit(self.object, ((BASE_POS[0] + self.object.get_rect()[2] / 2) + system.value[0], (BASE_POS[1] + self.object.get_rect()[3] / 2) + system.value[1]))
-        elif system.anim_type == "scale":
-            self.object = pygame.transform.smoothscale(self.object_copy, (self.object_copy.get_rect()[2] * system.value[0], self.object_copy.get_rect()[3] * system.value[1]))
-            self.surface.blit(self.object, (self.object_rect[0] - (self.object.get_rect()[2] / 2), self.object_rect[1] - (self.object.get_rect()[3] / 2)))
+    def calculateTracks(self, system):
+        x = 0
+        y = 0
 
+        
+        if system.anim_type == "p":
+            x += system.value[0] 
+            y += system.value[1]
+        elif system.anim_type == "s":
+            self.object = pygame.transform.smoothscale(self.object_copy, (self.object_copy.get_rect()[2] * system.value[0], self.object_copy.get_rect()[3] * system.value[1]))
+            x += (self.object_copy.get_rect()[2] - self.object.get_rect()[2]) / 2
+            y += (self.object_copy.get_rect()[3] - self.object.get_rect()[3]) / 2
             
+        
+            
+        
+        return (x, y)
+            
+        
+
+'''
+def renderObject(self, system):
+    x = 0
+    y = 0
+
+    if system.anim_type == "p":
+        # Get current size of the object
+        width, height = self.object.get_rect()[2], self.object.get_rect()[3]
+
+        # Move to position, then offset to center the object
+        x = BASE_POS[0] + system.value[0] - width / 2
+        y = BASE_POS[1] + system.value[1] - height / 2
+
+    elif system.anim_type == "s":
+        # Compute new size based on scale system
+        new_width = int(self.object_copy.get_width() * system.value[0])
+        new_height = int(self.object_copy.get_height() * system.value[1])
+
+        # Update the scaled object
+        self.object = pygame.transform.smoothscale(self.object_copy, (new_width, new_height))
+
+        # To keep it centered, offset by half the change in width/height
+        old_width = self.object_copy.get_width()
+        old_height = self.object_copy.get_height()
+
+        dx = (old_width - new_width) / 2
+        dy = (old_height - new_height) / 2
+
+        x += dx
+        y += dy
+
+    return (x, y)
+'''
                 
 
 '''
 animation track class
 '''
 class animation(object):
-    def __init__(self, type, keyframes, origin = (0, 0), does_loop = False):
+    def __init__(self, type, keyframes, origin = (0, 0), does_loop = False, arg1 = False, arg2 = False, arg3 = False):
+        self.argument1 = arg1
+        self.argument2 = arg2
+        self.argument3 = arg3
         self.processed_keyframes = []
         self.index = 0
         self.origin = origin
@@ -170,7 +252,7 @@ class animation(object):
     '''
     add a new keyframe to an animation track
     '''
-    def addKeyframe(self, time, x, y, ease="linear"):
+    def addKeyframe(self, time, x, y, ease = "linear"):
         new_key = keyframe()
         if len(self.processed_keyframes) > 0:
             new_key.x1 = self.processed_keyframes[-1].x2
@@ -179,7 +261,7 @@ class animation(object):
             new_key.x1 = self.origin[0]
             new_key.y1 = self.origin[1]
         new_key.x2 = x
-        if self.anim_type == "position":
+        if self.anim_type == "p":
             new_key.y2 = -y
         else:
             new_key.y2 = y

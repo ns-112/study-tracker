@@ -100,13 +100,13 @@ tracker = guie.gui_screen(screen, 2)
 
 
 #buttons
-home.create_button(b_close, "exit", x = 25, y = 25)
-home.create_button(b_test, "stock", x = 400, y = 100)
-home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
+home.create_button(screen, b_close, "exit", x = 0, y = 0)
+#home.create_button(b_test, "stock", x = 400, y = 100)
+#home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
 
-settings.create_button(b_close, "exit", x = 25, y = 25)
+#settings.create_button(b_close, "exit", x = 25, y = 25)
 
-tracker.create_button(b_close, "exit", x = 25, y = 25)
+#tracker.create_button(b_close, "exit", x = 25, y = 25)
 
 
 
@@ -143,6 +143,9 @@ while running:
         
         if (event.type == pygame.QUIT):
             running = False
+
+    for button in home.buttons:
+        button.animation_base.updateObject(dt)
     
     home.update(dt, click_event, release_event, current_page)
     home.update_active_popups(dt, click_event, release_event)
