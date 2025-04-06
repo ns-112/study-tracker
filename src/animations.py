@@ -59,7 +59,7 @@ class object:
         y_offset = self.object_rect[1]
         x = 0
         y = 0
-        print(x_offset, y_offset)
+       
         for system in self.position:
             self.animateSystem(deltaTime, system)
             (x, y) = self.calculateTracks(system)
@@ -143,6 +143,9 @@ class object:
                         system.index = 0
                         for keys in system.processed_keyframes:
                             keys.lerpval = 0 
+                    if system.argument2:
+                        system.index = 2
+                
             else:
                 if key.lerpval >= key.length:
                     system.index += 1
@@ -152,6 +155,7 @@ class object:
                             keys.lerpval = 0 
                 if system.index >= len(system.processed_keyframes):
                     system.index = len(system.processed_keyframes) - 1
+        
         
     
     '''

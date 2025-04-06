@@ -144,8 +144,6 @@ while running:
         if (event.type == pygame.QUIT):
             running = False
 
-    for button in home.buttons:
-        button.animation_base.updateObject(dt)
     
     home.update(dt, click_event, release_event, current_page)
     home.update_active_popups(dt, click_event, release_event)

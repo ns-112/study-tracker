@@ -17,7 +17,7 @@ class button:
         self.length = animation_length
         self.clicked = False
         self.animation_base = anim.object(pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha(), screen, (x, y))
-        self.scale_track = self.animation_base.addAnimationTrack("s", [[0, 1, 1], [animation_length, scale_to, scale_to, "out_circ"]], argument1 = self.hover, argument2 = self.clicked, argument3 = True)
+        self.scale_track = self.animation_base.addAnimationTrack("s", [[0, 1, 1], [animation_length, scale_to, scale_to, "out_circ"], [0.05, scale_to - 0.1, scale_to - 0.1, "out_circ"]], argument1 = self.hover, argument2 = self.clicked, argument3 = True)
         
 
 
@@ -227,7 +227,30 @@ class gui_screen:
                 
                 for button in self.buttons:
                     button.animation_base.scale[0].argument1 = button.hover
-            
+
+                for button in self.buttons:
+                    if (button.hover and (event1 or button.clicked)):
+                        button.clicked = True
+                        button.animation_base.index = 2
+                        print(button.animation_base.index)
+                        if event2:
+                                button.clicked = False
+                                event2 = False
+                                event1 = False
+                                button.hover = False
+                                button.callback()
+                                
+                    else:
+                        button.animation_base.index = 1
+                        button.clicked = False
+            else:
+                for button in self.buttons:
+                    button.clicked = False
+                    
+            for button in self.buttons:
+                button.animation_base.scale[0].argument2 = button.clicked
+                button.animation_base.updateObject(deltatime)
+                print(button.clicked)
 
             #hover scale
             
