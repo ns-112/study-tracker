@@ -4,8 +4,13 @@ def eyeDetection():
     import numpy as np
     import pygame
     import os
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    
+
+
+
     detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+    predictor = dlib.shape_predictor(os.path.join(src_dir,"shape_predictor_68_face_landmarks.dat"))
 
 
     cam = cv.VideoCapture(0)
