@@ -1,4 +1,2 @@
-import tracker
+import gui
 import AfterStudyGUI
-tracker.eyeDetection()
-AfterStudyGUI.showFinalGraph()

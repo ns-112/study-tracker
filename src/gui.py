@@ -6,7 +6,7 @@ import guie
 import timeline as tl
 import cv2
 import numpy as np
-from tracker import eyeDetection
+from Detect import eyeDetection
 import threading
 
 # Outback easing
@@ -66,7 +66,7 @@ def capture_frames():
     for frame in eyeDetection():
 
         frame_surface = frame
- 
+    
 
 #button callbacks
 def b_close():
@@ -155,9 +155,9 @@ while running:
         page_tracker += 1
         thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
-   
+    
     tracker.update(dt, click_event, release_event, current_page, frame_surface)
- 
+    
     
     
     pygame.display.flip()

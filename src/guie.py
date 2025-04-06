@@ -4,7 +4,6 @@ import numpy as np
 import pyautogui
 from PIL import Image
 import io
-
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
 textures_dir = os.path.join(project_dir,'textures')
