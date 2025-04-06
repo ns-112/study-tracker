@@ -1,0 +1,2 @@
+this folder contains data generated through tracking, to be shown in plots on the ui
+plot will contain x and y values for graphs and stats
