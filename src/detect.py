@@ -1,14 +1,13 @@
+
+import cv2 as cv
+import dlib
+import numpy as np
+import pygame
+import os
+
 def eyeDetection():
-    import cv2 as cv
-    import dlib
-    import numpy as np
-    import pygame
-    import os
-    src_dir = os.path.dirname(os.path.abspath(__file__))
     
-
-
-
+    src_dir = os.path.dirname(os.path.abspath(__file__))
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor(os.path.join(src_dir,"shape_predictor_68_face_landmarks.dat"))
 
@@ -20,7 +19,7 @@ def eyeDetection():
         gray = cv.equalizeHist(gray)
         faces=detector(gray)
         if (len(faces) == 0):
-            cv.putText(frame, str("No Face"), (50, 150), 5, 2, (0, 0, 255), 3)
+            cv.putText(frame, str("No Face Detected"), (125, 100), 5, 2, (255, 255, 255), 2)
         for face in faces:
             landmarks= predictor(gray,face)
             height,width, _= frame.shape
@@ -53,11 +52,11 @@ def eyeDetection():
                 gazeRation = leftSideWhite/rightSideWhite
 
             if (gazeRation > 3):
-                cv.putText(frame, str("Looking Left"), (50, 150), 5, 2, (0, 0, 255), 3)
+                cv.putText(frame, str("Looking Left"), (125, 100), 5, 2, (255, 255, 255), 2)
             elif (gazeRation < 1):
-                cv.putText(frame, str("Looking Right"), (50, 150), 5, 2, (0, 0, 255), 3)
+                cv.putText(frame, str("Looking Right"), (125, 100), 5, 2, (255, 255, 255), 2)
             else:
-                cv.putText(frame, str("Looking Center"), (50, 150), 5, 2, (0, 0, 255), 3)
+                cv.putText(frame, str("Looking Center"), (125, 100), 5, 2, (255, 255, 255), 2)
 
 
         frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)

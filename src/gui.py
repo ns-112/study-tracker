@@ -6,7 +6,7 @@ import guie
 import timeline as tl
 import cv2
 import numpy as np
-from Detect import eyeDetection
+from detect import eyeDetection
 import threading
 
 # Outback easing
@@ -101,7 +101,7 @@ tracker = guie.gui_screen(screen, 2)
 
 #buttons
 home.create_button(b_close, "exit", x = 25, y = 25)
-home.create_button(b_test, "stock", x = 400, y = 100)
+home.create_button(b_test, "stock", x = (pyautogui.size().width // 4), y = 500)
 home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
 
 settings.create_button(b_close, "exit", x = 25, y = 25)
