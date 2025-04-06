@@ -7,11 +7,12 @@ import io
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
-textures_dir = f'{project_dir}\\textures\\'
+textures_dir = os.path.join(project_dir,'textures')
+popup_dir = os.path.join(textures_dir,'popup')
 
 class button:
     def __init__(self, texture, callback, x = 0, y = 0, column = 0, row = 0, scale = 1, animation_length = 0.5):
-        self.base = pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha()
+        self.base = pygame.image.load(os.path.join(textures_dir,texture)+'.png').convert_alpha()
         self.scale = (pygame.Surface.get_width(self.base) * scale, pygame.Surface.get_height(self.base) * scale)
         self.copy = self.base.convert_alpha()
         self.lerp = 0
@@ -60,9 +61,9 @@ class gui_screen:
         
 
     def create_popup_button(self, text, index, width, height, scale, popup, pyfont = None, color = (255, 255, 255)):
-        side_left = pygame.image.load(f'{textures_dir}\\popup\\text_button_side.png').convert_alpha()
-        side_right_pil = Image.open(f'{textures_dir}\\popup\\text_button_side.png').convert("RGBA")
-        middle_part = pygame.image.load(f'{textures_dir}\\popup\\text_button_middle.png').convert_alpha()
+        side_left = pygame.image.load(os.path.join(popup_dir,'text_button_side.png')).convert_alpha()
+        side_right_pil = Image.open(os.path.join(popup_dir,'text_button_side.png')).convert("RGBA")
+        middle_part = pygame.image.load(os.path.join(popup_dir,'text_button_middle.png')).convert_alpha()
         side_right_pil = side_right_pil.transpose(Image.FLIP_LEFT_RIGHT)
         side_right_bytes = io.BytesIO()
         side_right_pil.save(side_right_bytes, format="PNG")

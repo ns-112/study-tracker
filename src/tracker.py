@@ -2,11 +2,11 @@ def eyeDetection():
     import cv2 as cv
     import dlib
     import numpy as np
+    import pygame
+    import os
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
-    color=(0,255,0)
-    thickness=2
 
     cam = cv.VideoCapture(0)
     while True:
@@ -14,6 +14,8 @@ def eyeDetection():
         gray = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
         gray = cv.equalizeHist(gray)
         faces=detector(gray)
+        if (len(faces) == 0):
+            cv.putText(frame, str("No Face"), (50, 150), 5, 2, (0, 0, 255), 3)
         for face in faces:
             landmarks= predictor(gray,face)
             height,width, _= frame.shape
@@ -45,7 +47,7 @@ def eyeDetection():
             else:
                 gazeRation = leftSideWhite/rightSideWhite
 
-            if (gazeRation > 3.5):
+            if (gazeRation > 3):
                 cv.putText(frame, str("Looking Left"), (50, 150), 5, 2, (0, 0, 255), 3)
             elif (gazeRation < 1):
                 cv.putText(frame, str("Looking Right"), (50, 150), 5, 2, (0, 0, 255), 3)
@@ -53,10 +55,13 @@ def eyeDetection():
                 cv.putText(frame, str("Looking Center"), (50, 150), 5, 2, (0, 0, 255), 3)
 
 
-            cv.imshow("Fullb",frame)
+        frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+        frame_rgb = np.rot90(frame_rgb)
+        frame_rgb = np.flipud(frame_rgb)
+        yield pygame.surfarray.make_surface(frame_rgb)
 
+            
 
         if cv.waitKey(1) == ord('q'):
             break
     cam.release()
-    cv.destroyAllWindows()

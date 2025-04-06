@@ -6,7 +6,7 @@ import guie
 import timeline as tl
 import cv2
 import numpy as np
-import setup
+from tracker import eyeDetection
 import threading
 
 # Outback easing
@@ -63,7 +63,7 @@ frame_surface = None
 
 def capture_frames():
     global frame_surface
-    for frame in setup.eyeDetection():
+    for frame in eyeDetection():
 
         frame_surface = frame
  
