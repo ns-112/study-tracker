@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from detect import eyeDetection
 import threading
+import AfterStudyGUI
 
 # Outback easing
 def ease_out_back(t, s=1.70158):
@@ -63,9 +64,11 @@ frame_surface = None
 
 def capture_frames():
     global frame_surface
-    for frame in eyeDetection():
+    global distractedSeconds
+    for frame, distractedSeconds in eyeDetection():
 
         frame_surface = frame
+        distractedSeconds = distractedSeconds
     
 
 #button callbacks
@@ -208,3 +211,4 @@ while running:
     
 
 pygame.quit()
+AfterStudyGUI.Graph(distractedSeconds)

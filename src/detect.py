@@ -4,12 +4,15 @@ import dlib
 import numpy as np
 import pygame
 import os
-
+from time import sleep
+from math import hypot
 def eyeDetection():
     
     src_dir = os.path.dirname(os.path.abspath(__file__))
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor(os.path.join(src_dir,"shape_predictor_68_face_landmarks.dat"))
+    unfocused = False
+    unfocusedTime = 0
 
 
     cam = cv.VideoCapture(0)
@@ -18,6 +21,7 @@ def eyeDetection():
         gray = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
         gray = cv.equalizeHist(gray)
         faces=detector(gray)
+
         if (len(faces) == 0):
             cv.putText(frame, str("No Face Detected"), (125, 100), 5, 2, (255, 255, 255), 2)
         for face in faces:
@@ -51,18 +55,22 @@ def eyeDetection():
             else:
                 gazeRation = leftSideWhite/rightSideWhite
 
-            if (gazeRation > 3):
-                cv.putText(frame, str("Looking Left"), (125, 100), 5, 2, (255, 255, 255), 2)
-            elif (gazeRation < 1):
-                cv.putText(frame, str("Looking Right"), (125, 100), 5, 2, (255, 255, 255), 2)
+            if (unfocused):
+                if (gazeRation > 3 or gazeRation < 1):
+                    unfocusedTime += 0.1
+                    sleep(0.1)
+            elif (gazeRation > 3 or gazeRation < 1):
+                unfocused = True
             else:
-                cv.putText(frame, str("Looking Center"), (125, 100), 5, 2, (255, 255, 255), 2)
+                unfocused = False
 
 
+
+        cv.putText(frame, str(f"Unfocused Time: {unfocusedTime}"), (125, 100), 5, 2, (255, 255, 255), 2)
         frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
         frame_rgb = np.rot90(frame_rgb)
         frame_rgb = np.flipud(frame_rgb)
-        yield pygame.surfarray.make_surface(frame_rgb)
+        yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime
 
             
 
