@@ -1,2 +1,1 @@
 import gui
-import AfterStudyGUI
