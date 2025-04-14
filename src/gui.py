@@ -65,10 +65,12 @@ frame_surface = None
 def capture_frames():
     global frame_surface
     global distractedSeconds
-    for frame, distractedSeconds in eyeDetection():
+    global totalTime
+    for frame, distractedSeconds,totalTime in eyeDetection():
 
         frame_surface = frame
         distractedSeconds = distractedSeconds
+        totalTime = totalTime
     
 
 #button callbacks
@@ -211,4 +213,4 @@ while running:
     
 
 pygame.quit()
-AfterStudyGUI.Graph(distractedSeconds)
+AfterStudyGUI.Graph(distractedSeconds, totalTime)

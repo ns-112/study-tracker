@@ -5,7 +5,7 @@ import numpy as np
 import pygame
 import os
 from time import sleep
-from math import hypot
+import time
 def eyeDetection():
     
     src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -16,7 +16,9 @@ def eyeDetection():
 
 
     cam = cv.VideoCapture(0)
+    start = time.time()
     while True:
+
         ret,frame = cam.read()
         gray = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
         gray = cv.equalizeHist(gray)
@@ -70,7 +72,8 @@ def eyeDetection():
         frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
         frame_rgb = np.rot90(frame_rgb)
         frame_rgb = np.flipud(frame_rgb)
-        yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime
+        end = time.time()
+        yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime,end-start
 
             
 

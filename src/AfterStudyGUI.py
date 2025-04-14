@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 
 
 #GUI
-def Graph(time):
-    distractedSeconds = time
+def Graph(disTime,totTime):
+    focusedPer=(((totTime-disTime)/totTime) * 100)
+    disPer = (disTime / totTime) * 100
     root = tk.Tk()
     
     root.title ("Study Tracker")
@@ -24,8 +25,8 @@ def Graph(time):
     
     #PI CHART LABELS, SIZES,  AND COLORS.
     # sizes must equal to 100 
-    labels = ['Study', 'Wandering', 'Distracted', 'Other']
-    sizes = [50, 30, 15, 5]  
+    labels = ['Study', 'Distracted']
+    sizes = [focusedPer, disPer]  
     colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99']
     
     fig, ax = plt.subplots(figsize=(5, 3))  #Adjust size of the pie chart
