@@ -2,6 +2,7 @@ import pyautogui
 import numpy as np
 import pygame
 
+
 #fix this to be dynamic
 WIDTH = 1280
 HEIGHT = 720
@@ -14,7 +15,7 @@ animation tracks which include
 keyframes
 '''
 class object:
-    def __init__(self, object, screen, origin = (0, 0)):
+    def __init__(self, object, screen, origin = (0, 0), is_button = False):
         self.position = []
         self.scale = []    
         #todo   
@@ -25,13 +26,16 @@ class object:
         self.surface = screen
         self.object = object
         self.object_copy = object
-        self.object_rect = pygame.Rect(BASE_POS[0] + origin[0], BASE_POS[1] + (-origin[1]), object.get_rect()[2], object.get_rect()[3])
+        self.object_rect = pygame.Rect((BASE_POS[0] + origin[0]) - (object.get_rect()[2] / 2), (BASE_POS[1] + (-origin[1])) - (object.get_rect()[3] / 2), object.get_rect()[2], object.get_rect()[3])
+        self.is_button = is_button
+        self.is_hovering = False
+        self.l_mouse_down = False
 
     '''
     create and append new animation track
     '''
-    def addAnimationTrack(self, type, keyframes, start = (0, 0), loop = False, argument1 = False, argument2 = False, argument3 = False):
-        anim = animation(type, keyframes, origin = start, does_loop = loop, arg1 = argument1, arg2 = argument2, arg3 = argument3)
+    def addAnimationTrack(self, type, keyframes, start = (0, 0), loop = False):
+        anim = animation(type, keyframes, origin = start, does_loop = loop)
         self.addAnimationFromClass(anim)
 
     '''
@@ -53,13 +57,20 @@ class object:
     main function to call that updates keyframe values
     and renders object to screen
     '''
-    def updateObject(self, deltaTime):
-        self.surface.fill((0, 0, 0))
+    def updateObject(self, deltaTime, popups):
+        
         x_offset = self.object_rect[0]
         y_offset = self.object_rect[1]
         x = 0
         y = 0
-       
+        if len(popups) == 0:
+            if (self.object_rect.collidepoint(pygame.mouse.get_pos())):
+                
+                self.is_hovering = True
+            else:
+                self.is_hovering = False
+        else:
+            self.is_hovering = False
         for system in self.position:
             self.animateSystem(deltaTime, system)
             (x, y) = self.calculateTracks(system)
@@ -91,15 +102,21 @@ class object:
         key = system.processed_keyframes[system.index]
         if (system.index < len(system.processed_keyframes)):
             
-            if (system.argument3):
-                if (system.argument1):
+            if (self.is_button):
+                if (self.is_hovering and not self.l_mouse_down):
+                    system.index = 1
                     key.lerpval += deltaTime
-                elif (not system.argument1 and key.lerpval > 0):
+                    key = system.processed_keyframes[system.index]
+                    
+                elif (key.lerpval > 0 and self.is_hovering == False and not self.l_mouse_down):
                     key.lerpval -= deltaTime
+                    key = system.processed_keyframes[system.index]
+                    
+                
+                
             else:
                 key.lerpval += deltaTime
-                
-
+           
             key.lerpval = min(key.lerpval, key.length) 
             if (system.index > 0):
                 t = key.lerpval / key.length
@@ -136,18 +153,10 @@ class object:
             else:
                 system.value = (system.lerp(key.x1, key.x2, t), system.lerp(key.y1, key.y2, t))
 
-            if (system.argument3):
-                if key.lerpval >= key.length and not system.argument1:
-                    system.index += 1
-                    if system.loop and system.index >= len(system.processed_keyframes):
-                        system.index = 0
-                        for keys in system.processed_keyframes:
-                            keys.lerpval = 0 
-                    if system.argument2:
-                        system.index = 2
+            
                 
-            else:
-                if key.lerpval >= key.length:
+            if (self.is_button == False):
+                if (key.lerpval >= key.length):
                     system.index += 1
                     if system.loop and system.index >= len(system.processed_keyframes):
                         system.index = 0
@@ -155,6 +164,18 @@ class object:
                             keys.lerpval = 0 
                 if system.index >= len(system.processed_keyframes):
                     system.index = len(system.processed_keyframes) - 1
+            elif (self.is_button):  
+                if (not self.is_hovering and key.lerpval <= 0 and not self.l_mouse_down):
+                    system.index = 0
+                    key = system.processed_keyframes[system.index]
+                if (self.l_mouse_down):
+                    system.index = 2
+                    key = system.processed_keyframes[system.index]
+
+                    
+                
+                
+
         
         
     
@@ -182,49 +203,13 @@ class object:
             
         
 
-'''
-def renderObject(self, system):
-    x = 0
-    y = 0
-
-    if system.anim_type == "p":
-        # Get current size of the object
-        width, height = self.object.get_rect()[2], self.object.get_rect()[3]
-
-        # Move to position, then offset to center the object
-        x = BASE_POS[0] + system.value[0] - width / 2
-        y = BASE_POS[1] + system.value[1] - height / 2
-
-    elif system.anim_type == "s":
-        # Compute new size based on scale system
-        new_width = int(self.object_copy.get_width() * system.value[0])
-        new_height = int(self.object_copy.get_height() * system.value[1])
-
-        # Update the scaled object
-        self.object = pygame.transform.smoothscale(self.object_copy, (new_width, new_height))
-
-        # To keep it centered, offset by half the change in width/height
-        old_width = self.object_copy.get_width()
-        old_height = self.object_copy.get_height()
-
-        dx = (old_width - new_width) / 2
-        dy = (old_height - new_height) / 2
-
-        x += dx
-        y += dy
-
-    return (x, y)
-'''
                 
 
 '''
 animation track class
 '''
 class animation(object):
-    def __init__(self, type, keyframes, origin = (0, 0), does_loop = False, arg1 = False, arg2 = False, arg3 = False):
-        self.argument1 = arg1
-        self.argument2 = arg2
-        self.argument3 = arg3
+    def __init__(self, type, keyframes, origin = (0, 0), does_loop = False):
         self.processed_keyframes = []
         self.index = 0
         self.origin = origin
@@ -238,13 +223,6 @@ class animation(object):
                 self.addKeyframe(i[0], i[1], i[2])
         
         
-
-    
-
-        
-            
-            
-    
 
 
     '''

@@ -11,24 +11,41 @@ project_dir = os.path.dirname(src_dir)
 textures_dir = f'{project_dir}\\textures\\'
 
 class button:
-    def __init__(self, texture, screen, callback, x = 0, y = 0, column = 0, row = 0, animation_length = 0.15, scale_to = 1.15):
+    def __init__(self, texture, screen, callback, x, y, animation_length, scale_to):
         self.hover = False
         self.callback = callback
         self.length = animation_length
         self.clicked = False
-        self.animation_base = anim.object(pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha(), screen, (x, y))
-        self.scale_track = self.animation_base.addAnimationTrack("s", [[0, 1, 1], [animation_length, scale_to, scale_to, "out_circ"], [0.05, scale_to - 0.1, scale_to - 0.1, "out_circ"]], argument1 = self.hover, argument2 = self.clicked, argument3 = True)
+        self.animation_base = anim.object(pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha(), screen, (x, y), is_button = True)
+        self.scale_track = self.animation_base.addAnimationTrack("s", [[0, 1, 1], [animation_length, scale_to, scale_to, "out_circ"], [0.05, scale_to - 0.1, scale_to - 0.1, "out_circ"]], )
         
+class popup:
+    def __init__(self, button1_text, button2_text, button1_callback, button2_callback, x, y, animation_length):
+        self.active = False
+        self.length = animation_length
+        self.popup = None
+        self.button1 = gui_screen.create_popup_button(self, button1_text, 0, popup = self.popup)
 
 
 
 class gui_screen:
     def __init__(self, screen, page = 0, active = True):
         self.page = page
+        self.prio_queue = []
         self.buttons = []
         self.active_popups = {}
         self.surface = screen
         self.active = active
+
+    def create_static_texture(self, texture, pos = (0, 0)):
+        tex = pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha()
+        tex_rect = pygame.Rect(pos[0], pos[1], tex.get_rect()[2], tex.get_rect()[3])
+        self.prio_queue.append((tex, tex_rect))
+
+    def update_prio_queue(self):
+        if len(self.prio_queue) > 0:
+            for tx in self.prio_queue:
+                self.surface.blit(tx[0], tx[1])
 
     def create_button(
             self, 
@@ -37,17 +54,26 @@ class gui_screen:
             texture,    
             x = 0,                     
             y = 0,                      
-            column = 0,                
-            row = 0,                   
+            layout = (-1, -1),                
             scale = 1.15,                  
-            animation_length = 0.15      
+            animation_length = 0.08     
             ):
         
-        temp_button = button(texture, screen, callback, x, y, column, row, animation_length, scale)
+        temp_button = button(texture, screen, callback, x, y, animation_length, scale)
+        if (layout[0] != -1): #column
+            if (len(self.buttons) > 0):
+                temp_button.animation_base.object_rect[0] = (((self.buttons[-1].animation_base.object_rect[2]) + self.buttons[-1].animation_base.object_rect[0]) * layout[0]) + 35
+                
+        if (layout[1] != -1): #row
+            if (len(self.buttons) > 0):
+                temp_button.animation_base.object_rect[1] = (((self.buttons[-1].animation_base.object_rect[3]) + self.buttons[-1].animation_base.object_rect[1]) * layout[1]) + 35
+        print(temp_button.animation_base.object_rect)
+            
         self.buttons.append(temp_button)
         
 
-        
+    def create_graph_popup(self, width, height):
+        pass
 
     def create_popup_button(self, text, index, width, height, scale, popup, pyfont = None, color = (255, 255, 255)):
         side_left = pygame.image.load(f'{textures_dir}\\popup\\text_button_side.png').convert_alpha()
@@ -155,7 +181,7 @@ class gui_screen:
         button_2_copy = button_2
 
         font = pygame.font.Font(None, 36)
-        popup_text_render = font.render(popup_text, True, (255, 255, 255))
+        popup_text_render = font.render(popup_text, True, (255, 255, 255)).convert_alpha()
 
         overlay = pygame.Surface((self.surface.get_width(), self.surface.get_height()), pygame.SRCALPHA)
         overlay.fill((0, 0, 0))
@@ -218,22 +244,22 @@ class gui_screen:
         
         if self.page == screen:
             if (len(self.active_popups) == 0):
-                #hover
+                
                 for button in self.buttons:
                     if button.animation_base.object_rect.collidepoint(pygame.mouse.get_pos()) and self.active:
                         button.hover = True
                     else:
                         button.hover = False
                 
-                for button in self.buttons:
-                    button.animation_base.scale[0].argument1 = button.hover
+
 
                 for button in self.buttons:
                     if (button.hover and (event1 or button.clicked)):
                         button.clicked = True
-                        button.animation_base.index = 2
-                        print(button.animation_base.index)
+                        button.animation_base.l_mouse_down = True
+                        
                         if event2:
+                                button.animation_base.l_mouse_down = False
                                 button.clicked = False
                                 event2 = False
                                 event1 = False
@@ -241,18 +267,20 @@ class gui_screen:
                                 button.callback()
                                 
                     else:
-                        button.animation_base.index = 1
+                        button.animation_base.l_mouse_down = False
                         button.clicked = False
             else:
                 for button in self.buttons:
                     button.clicked = False
-                    
+            if len(self.prio_queue) > 0:
+                for prio in self.prio_queue:
+                    self.surface.blit(prio[0], prio[1])
+            else:
+                self.surface.fill((0, 0, 0))
             for button in self.buttons:
-                button.animation_base.scale[0].argument2 = button.clicked
-                button.animation_base.updateObject(deltatime)
-                print(button.clicked)
+                button.animation_base.updateObject(deltatime, self.active_popups)
+                
 
-            #hover scale
             
             '''
              if (len(self.active_popups) == 0):

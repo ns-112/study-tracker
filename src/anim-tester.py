@@ -25,7 +25,7 @@ running = True
 
 
 image_object = anim.object(img, screen, (20, 20))
-image_object.addAnimationTrack("s", [[0, 1, 1], [.15, 1.15, 1.15, "out_circ"]], argument3=True)
+image_object.addAnimationTrack("s", [[0, 1, 1], [.15, 1.05, 1.05, "out_circ"]])
 #image_object.addAnimationTrack("p", [[0, 0, 0], [0.5, 200, 5, "in_out_sine"], [1, 0, 0, "in_out_sine"]], loop = True)
 
 

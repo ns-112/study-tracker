@@ -20,13 +20,14 @@ def ease_in_back(t, s=1.70158):
 
 WIDTH = 1280
 HEIGHT = 720
+window_anims = False
 BASE_POS = (pyautogui.size().width // 2 - (WIDTH / 2), (pyautogui.size().height // 2) - (HEIGHT / 2))
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
 
 pygame.init()
-screen = pygame.display.set_mode((0, HEIGHT), flags=pygame.RESIZABLE | pygame.NOFRAME | pygame.SRCALPHA) 
+screen = pygame.display.set_mode((0, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA) 
 window = Window.from_display_module()
 clock = pygame.time.Clock()
 
@@ -100,11 +101,13 @@ tracker = guie.gui_screen(screen, 2)
 
 
 #buttons
-home.create_button(screen, b_close, "exit", x = 0, y = 0)
-#home.create_button(b_test, "stock", x = 400, y = 100)
+home.create_static_texture("bg")
+home.create_button(screen, b_close, "exit", x = -(WIDTH / 2) + 35, y = (HEIGHT / 2) - 35)
+home.create_button(screen, b_test, "graph", x = -400, y = 230)
 #home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
 
 #settings.create_button(b_close, "exit", x = 25, y = 25)
+
 
 #tracker.create_button(b_close, "exit", x = 25, y = 25)
 
@@ -144,7 +147,7 @@ while running:
         if (event.type == pygame.QUIT):
             running = False
 
-    
+
     home.update(dt, click_event, release_event, current_page)
     home.update_active_popups(dt, click_event, release_event)
     settings.update(dt, click_event, release_event, current_page)
@@ -166,20 +169,29 @@ while running:
 
     #opening and closing animation
     
-    if (elapsed_time >= timeline.events["start_open"] and elapsed_time <= timeline.events["end_open"]):
-        opening = True
-        transition_time += dt
-    elif (elapsed_time > timeline.events["end_open"] and not commit_close):
-        opening = False
-        transition_time = 0
-    
-    if (elapsed_time >= timeline.events["start_close"] and elapsed_time <= timeline.events["end_close"] and commit_close and release_event):
+    if (window_anims):
+        if (elapsed_time >= timeline.events["start_open"] and elapsed_time <= timeline.events["end_open"]):
+            opening = True
+            transition_time += dt
+        elif (elapsed_time > timeline.events["end_open"] and not commit_close):
+            opening = False
+            transition_time = 0
         
-        closing = True
-        transition_time += dt
-    elif(elapsed_time > timeline.events["end_close"] and timeline.events["start_close"] != -1):
-        closing = False
-        transition_time = 0
+        if (elapsed_time >= timeline.events["start_close"] and elapsed_time <= timeline.events["end_close"] and commit_close and release_event):
+            
+            closing = True
+            transition_time += dt
+        elif(elapsed_time > timeline.events["end_close"] and timeline.events["start_close"] != -1):
+            closing = False
+            transition_time = 0
+    else:
+        opening = False
+        if elapsed_time == 0:
+            screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA) 
+            window.position = ( BASE_POS[0], BASE_POS[1])
+        if commit_close and release_event:
+            running = False
+            closing = False
         
     
 
