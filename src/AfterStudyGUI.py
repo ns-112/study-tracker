@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 
 
 #GUI
-def Graph(disTime,totTime):
+def Graph(disTime,totTime,stamps,stamplen):
+    print(stamps)
+    print(stamplen)
     focusedPer=(((totTime-disTime)/totTime) * 100)
     disPer = (disTime / totTime) * 100
     root = tk.Tk()
