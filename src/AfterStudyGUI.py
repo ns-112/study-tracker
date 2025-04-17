@@ -3,8 +3,10 @@ import cv2
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+from functools import reduce
 
-
+def combine(x,y):
+    return x + "\n" + y
 #GUI
 def Graph(disTime,totTime,stamps,stamplen):
     print(stamps)
@@ -43,6 +45,10 @@ def Graph(disTime,totTime,stamps,stamplen):
     
     top_label = tk.Label(root, text = "Study Overview")
     top_label.pack(side=tk.TOP, pady=20)
-    
+   
+    time_label = [ f"Name:{x}, Period:{stamps[x]}s, Duration:{stamplen[x]}s" for x in stamps]
+    time_label = reduce(combine, time_label)
+    time_label = tk.Label(root, text = time_label)
+    time_label.pack(pady=100)
     
     root.mainloop()

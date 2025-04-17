@@ -72,8 +72,8 @@ def eyeDetection():
                     unfocused = False
                     timeStampEnd = time.time()
                     if ((timeStampEnd - timeStampStart) > 1):
-                        timeStamps[f"timestamp {timestampNum}"] = f"{round((timeStampStart - start), 2)} - {round((timeStampEnd - start), 2)}"
-                        timeStampLen[f"timestamp {timestampNum}"] = round((timeStampEnd - timeStampStart), 2)
+                        timeStamps[f"Timestamp {timestampNum}"] = f"{round((timeStampStart - start), 2)} - {round((timeStampEnd - start), 2)}"
+                        timeStampLen[f"Timestamp {timestampNum}"] = round((timeStampEnd - timeStampStart), 2)
                         timeStampStart = 0
                         timestampNum += 1
             elif (gazeRation > 3 or gazeRation < 1):
