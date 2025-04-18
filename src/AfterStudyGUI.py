@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 root = tk.Tk()
 
 root.title ("Study Tracker")
-root.geometry("1000x600")
+root.state("zoomed")
 
 frame = tk.Frame(root)
 frame.pack(fill=tk.BOTH, expand = True)
