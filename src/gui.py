@@ -4,9 +4,8 @@ import pyautogui
 from pygame._sdl2.video import Window
 import guie
 import timeline as tl
-import cv2
 import numpy as np
-from detect import eyeDetection
+import detect
 import threading
 import AfterStudyGUI
 
@@ -68,7 +67,9 @@ def capture_frames():
     global totalTime
     global timeStamps
     global timeStampLen
-    for frame, distractedSeconds,totalTime,timeStamps,timeStampLen in eyeDetection():
+    for frame, distractedSeconds,totalTime,timeStamps,timeStampLen in detect.eyeDetection():
+        if(stop):
+            break
 
         frame_surface = frame
         distractedSeconds = distractedSeconds
@@ -121,6 +122,8 @@ tracker.create_button(b_close, "exit", x = 25, y = 25)
 
 page_tracker = 0
 
+thread = threading.Thread(target=capture_frames, daemon=True)
+stop = False
 
 
 
@@ -162,7 +165,6 @@ while running:
 
     if current_page == 2 and page_tracker == 0:
         page_tracker += 1
-        thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
     
     tracker.update(dt, click_event, release_event, current_page, frame_surface)
@@ -215,6 +217,5 @@ while running:
     
     elapsed_time += dt
     
-
 pygame.quit()
-AfterStudyGUI.Graph(distractedSeconds, totalTime, timeStamps, timeStampLen)
+stop = True

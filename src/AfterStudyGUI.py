@@ -4,6 +4,7 @@ import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from functools import reduce
+from functools import partial
 
 from datetime import datetime
 
@@ -17,11 +18,13 @@ study_entry = tk.Entry(right_frame, width=50, font=("Arial", 12))
 confirmation_label = tk.Label(right_frame, text="", font=("Arial", 10))
 log_text = tk.Text(right_frame, height=10, width=60, font=("Courier New", 10), wrap="word")
 
-def log_study():
+def log_study(timeStamps):
     topic = study_entry.get()
+    distractions = len(timeStamps)
+    
     if topic.strip():
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        log_entry = f"{timestamp} - {topic}\n"
+        log_entry = f"{timestamp} - Distractions:{distractions}- {topic} - \n"
         with open("study_log.txt", "a") as f:
             f.write(log_entry)
         study_entry.delete(0, tk.END)
@@ -30,13 +33,27 @@ def log_study():
     else:
         confirmation_label.config(text="Please enter a topic first.", fg="red")
 
-log_button = tk.Button(right_frame, text="Log Study Session", command=log_study)
+def update_log_display():
+    try:
+        with open("study_log.txt", "r") as f:
+            lines = f.readlines()
+        last_entries = lines[-5:] if len(lines) > 5 else lines
+        log_text.delete(1.0, tk.END)
+        log_text.insert(tk.END, ''.join(last_entries))
+    except FileNotFoundError:
+        log_text.delete(1.0, tk.END)
+        log_text.insert(tk.END, "No sessions logged yet.")
+
 #GUI
 def combine(x,y):
     return x + "\n" + y
+
 def Graph(disTime,totTime,stamps,stamplen):
+    update_log_display()
     focusedPer=(((totTime-disTime)/totTime) * 100)
     disPer = (disTime / totTime) * 100
+
+    log_button = tk.Button(right_frame, text="Log Study Session", command=partial(log_study, stamplen))
     
     root.title ("Study Tracker")
     root.geometry("1000x600")
@@ -57,9 +74,9 @@ def Graph(disTime,totTime,stamps,stamplen):
     labels = ['Study', 'Distracted']
     sizes = [focusedPer, disPer]  
     colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99']
-    time_label = [ f"Name:{x}, Period:{stamps[x]}s, Duration:{stamplen[x]}s" for x in stamps]
+    time_label = [ f"{x}, Period:{stamps[x]}s, Duration:{stamplen[x]}s" for x in stamps]
     time_label = reduce(combine, time_label)
-    time_label = tk.Label(root, text = time_label)
+    time_label = tk.Label(root, text = f"Timestamps:\n {time_label}")
     time_label.pack(pady=100)
     
     fig, ax = plt.subplots(figsize=(5, 3))  #Adjust size of the pie chart
@@ -91,15 +108,6 @@ def Graph(disTime,totTime,stamps,stamplen):
 
 
 
-def update_log_display():
-    try:
-        with open("study_log.txt", "r") as f:
-            lines = f.readlines()
-        last_entries = lines[-5:] if len(lines) > 5 else lines
-        log_text.delete(1.0, tk.END)
-        log_text.insert(tk.END, ''.join(last_entries))
-    except FileNotFoundError:
-        log_text.delete(1.0, tk.END)
-        log_text.insert(tk.END, "No sessions logged yet.")
+
 
 

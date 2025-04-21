@@ -1,7 +1,3 @@
 src/__pycache__/
-<<<<<<< HEAD
-*.pyc
-study_log.txt
-=======
+src/study_log.txt
 *.avi
->>>>>>> timelineTimeStamps

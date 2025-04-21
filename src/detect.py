@@ -7,7 +7,7 @@ import os
 from time import sleep
 import time
 def eyeDetection():
-    
+    cam = cv.VideoCapture(0)
     src_dir = os.path.dirname(os.path.abspath(__file__))
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor(os.path.join(src_dir,"shape_predictor_68_face_landmarks.dat"))
@@ -20,7 +20,6 @@ def eyeDetection():
     timeStampEnd = 0
 
 
-    cam = cv.VideoCapture(0)
     start = time.time()
     while True:
         ret,frame = cam.read()
@@ -72,8 +71,8 @@ def eyeDetection():
                     unfocused = False
                     timeStampEnd = time.time()
                     if ((timeStampEnd - timeStampStart) > 1):
-                        timeStamps[f"Timestamp {timestampNum}"] = f"{round((timeStampStart - start), 2)} - {round((timeStampEnd - start), 2)}"
-                        timeStampLen[f"Timestamp {timestampNum}"] = round((timeStampEnd - timeStampStart), 2)
+                        timeStamps[f"{timestampNum}"] = f"{round((timeStampStart - start), 2)} - {round((timeStampEnd - start), 2)}"
+                        timeStampLen[f"{timestampNum}"] = round((timeStampEnd - timeStampStart), 2)
                         timeStampStart = 0
                         timestampNum += 1
             elif (gazeRation > 3 or gazeRation < 1):
@@ -91,6 +90,3 @@ def eyeDetection():
 
             
 
-        if cv.waitKey(1) == ord('q'):
-            break
-    cam.release()
