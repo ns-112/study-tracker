@@ -7,6 +7,7 @@ import timeline as tl
 import numpy as np
 import detect
 import threading
+import cv2
 import AfterStudyGUI
 
 # Outback easing
@@ -67,7 +68,10 @@ def capture_frames():
     global totalTime
     global timeStamps
     global timeStampLen
-    for frame, distractedSeconds,totalTime,timeStamps,timeStampLen in detect.eyeDetection():
+    width = 640
+    height = 480
+
+    for frame,distractedSeconds,totalTime,timeStamps,timeStampLen in detect.eyeDetection():
         if(stop):
             break
 

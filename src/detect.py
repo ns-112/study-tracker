@@ -23,13 +23,14 @@ def eyeDetection():
     start = time.time()
     while True:
         ret,frame = cam.read()
+        out = cv.VideoWriter('out.mp4',cv.VideoWriter_fourcc(*'mp4v'), 20.0,(640,480))
+        out.write(frame)
+
         gray = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
         gray = cv.equalizeHist(gray)
         faces=detector(gray)
 
         height,width, _= frame.shape
-        out = cv.VideoWriter('out.avi',cv.VideoWriter_fourcc(*'XVID'), 20.0,(width,height))
-        out.write(frame)
         if (len(faces) == 0):
             cv.putText(frame, str("No Face Detected"), (125, 100), 5, 2, (255, 255, 255), 2)
         for face in faces:
