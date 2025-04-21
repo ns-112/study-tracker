@@ -13,22 +13,28 @@ def eyeDetection():
     predictor = dlib.shape_predictor(os.path.join(src_dir,"shape_predictor_68_face_landmarks.dat"))
     unfocused = False
     unfocusedTime = 0
+    timestampNum = 0
+    timeStamps = {}
+    timeStampLen = {}
+    timeStampStart = 0
+    timeStampEnd = 0
 
 
     cam = cv.VideoCapture(0)
     start = time.time()
     while True:
-
         ret,frame = cam.read()
         gray = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
         gray = cv.equalizeHist(gray)
         faces=detector(gray)
 
+        height,width, _= frame.shape
+        out = cv.VideoWriter('out.avi',cv.VideoWriter_fourcc(*'XVID'), 20.0,(width,height))
+        out.write(frame)
         if (len(faces) == 0):
             cv.putText(frame, str("No Face Detected"), (125, 100), 5, 2, (255, 255, 255), 2)
         for face in faces:
             landmarks= predictor(gray,face)
-            height,width, _= frame.shape
             mask = np.zeros((height,width), np.uint8)
             leftEyeRegion = np.array([(landmarks.part(36).x,landmarks.part(36).y),
                                       (landmarks.part(37).x,landmarks.part(37).y),
@@ -57,15 +63,22 @@ def eyeDetection():
             else:
                 gazeRation = leftSideWhite/rightSideWhite
 
+            
             if (unfocused):
                 if (gazeRation > 3 or gazeRation < 1):
                     unfocusedTime += 0.1
                     sleep(0.1)
+                else:
+                    unfocused = False
+                    timeStampEnd = time.time()
+                    if ((timeStampEnd - timeStampStart) > 1):
+                        timeStamps[f"Timestamp {timestampNum}"] = f"{round((timeStampStart - start), 2)} - {round((timeStampEnd - start), 2)}"
+                        timeStampLen[f"Timestamp {timestampNum}"] = round((timeStampEnd - timeStampStart), 2)
+                        timeStampStart = 0
+                        timestampNum += 1
             elif (gazeRation > 3 or gazeRation < 1):
                 unfocused = True
-            else:
-                unfocused = False
-
+                timeStampStart = time.time()
 
 
         cv.putText(frame, str(f"Unfocused Time: {unfocusedTime}"), (125, 100), 5, 2, (255, 255, 255), 2)
@@ -73,7 +86,8 @@ def eyeDetection():
         frame_rgb = np.rot90(frame_rgb)
         frame_rgb = np.flipud(frame_rgb)
         end = time.time()
-        yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime,end-start
+        yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime,end-start,timeStamps, timeStampLen
+
 
             
 

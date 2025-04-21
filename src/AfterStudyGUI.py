@@ -3,6 +3,8 @@ import cv2
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+from functools import reduce
+
 from datetime import datetime
 
 
@@ -15,8 +17,24 @@ study_entry = tk.Entry(right_frame, width=50, font=("Arial", 12))
 confirmation_label = tk.Label(right_frame, text="", font=("Arial", 10))
 log_text = tk.Text(right_frame, height=10, width=60, font=("Courier New", 10), wrap="word")
 
+def log_study():
+    topic = study_entry.get()
+    if topic.strip():
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_entry = f"{timestamp} - {topic}\n"
+        with open("study_log.txt", "a") as f:
+            f.write(log_entry)
+        study_entry.delete(0, tk.END)
+        confirmation_label.config(text=f"Logged: {topic}", fg="green")
+        update_log_display()
+    else:
+        confirmation_label.config(text="Please enter a topic first.", fg="red")
+
+log_button = tk.Button(right_frame, text="Log Study Session", command=log_study)
 #GUI
-def Graph(disTime,totTime):
+def combine(x,y):
+    return x + "\n" + y
+def Graph(disTime,totTime,stamps,stamplen):
     focusedPer=(((totTime-disTime)/totTime) * 100)
     disPer = (disTime / totTime) * 100
     
@@ -39,6 +57,10 @@ def Graph(disTime,totTime):
     labels = ['Study', 'Distracted']
     sizes = [focusedPer, disPer]  
     colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99']
+    time_label = [ f"Name:{x}, Period:{stamps[x]}s, Duration:{stamplen[x]}s" for x in stamps]
+    time_label = reduce(combine, time_label)
+    time_label = tk.Label(root, text = time_label)
+    time_label.pack(pady=100)
     
     fig, ax = plt.subplots(figsize=(5, 3))  #Adjust size of the pie chart
     ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
@@ -52,7 +74,6 @@ def Graph(disTime,totTime):
     
     top_label = tk.Label(root, text = "Study Overview")
     top_label.pack(side=tk.TOP, pady=20)
-    log_button = tk.Button(right_frame, text="Log Study Session", command=log_study)
     log_button.pack(pady=(0, 10))
 
     log_display_label = tk.Label(right_frame, text="Logged Sessions:", font=("Arial", 14, "bold"))
@@ -68,19 +89,6 @@ def Graph(disTime,totTime):
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
     root.mainloop()
 
-
-def log_study():
-    topic = study_entry.get()
-    if topic.strip():
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        log_entry = f"{timestamp} - {topic}\n"
-        with open("study_log.txt", "a") as f:
-            f.write(log_entry)
-        study_entry.delete(0, tk.END)
-        confirmation_label.config(text=f"Logged: {topic}", fg="green")
-        update_log_display()
-    else:
-        confirmation_label.config(text="Please enter a topic first.", fg="red")
 
 
 def update_log_display():
