@@ -83,8 +83,6 @@ def Graph(disTime,totTime,stamps,stamplen):
     ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
     ax.axis('equal') #makes sure our pi chart is a circle according to aspect ratio
     
-    canvas = FigureCanvasTkAgg(fig, master=left_frame)
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
     
     label = tk.Label(right_frame, text="Study Recommendations")
     label.pack(pady=50)
@@ -98,10 +96,6 @@ def Graph(disTime,totTime,stamps,stamplen):
 
     log_text.pack(pady=5)
     
-    fig, ax = plt.subplots(figsize=(5, 3))  #Adjust size of the pie chart
-    ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
-    ax.axis('equal') #makes sure our pi chart is a circle according to aspect ratio
-
     canvas = FigureCanvasTkAgg(fig, master=left_frame)
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
     root.mainloop()
