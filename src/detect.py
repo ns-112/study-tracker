@@ -18,6 +18,7 @@ def eyeDetection():
     timeStampLen = {}
     timeStampStart = 0
     timeStampEnd = 0
+    noFace = False
 
 
     start = time.time()
@@ -31,8 +32,26 @@ def eyeDetection():
         faces=detector(gray)
 
         height,width, _= frame.shape
-        if (len(faces) == 0):
-            cv.putText(frame, str("No Face Detected"), (125, 100), 5, 2, (255, 255, 255), 2)
+        if(noFace):
+            if (noFace and len(faces) == 0):
+                cv.putText(frame, str("No Face Detected"), (125, 400), 5, 2, (255, 255, 255), 2)
+                unfocusedTime += 0.1
+                sleep(0.1)
+            else: 
+                noFace = False
+                timeStampEnd = time.time()
+                if ((timeStampEnd - timeStampStart) > 1):
+                    timeStamps[f"{timestampNum}"] = f"{round((timeStampStart - start), 2)} - {round((timeStampEnd - start), 2)}"
+                    timeStampLen[f"{timestampNum}"] = round((timeStampEnd - timeStampStart), 2)
+                    timeStampStart = 0
+                    timestampNum += 1
+
+
+        elif (len(faces) == 0):
+            cv.putText(frame, str("No Face Detected"), (125, 400), 5, 2, (255, 255, 255), 2)
+            noFace = True
+            timeStampStart = time.time()
+        
         for face in faces:
             landmarks= predictor(gray,face)
             mask = np.zeros((height,width), np.uint8)
