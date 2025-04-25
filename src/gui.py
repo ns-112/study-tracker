@@ -34,7 +34,7 @@ window = Window.from_display_module()
 clock = pygame.time.Clock()
 
 
-with open(f'{project_dir}\\data\\plot.json', 'r') as file:
+with open(os.path.join(project_dir, 'data', 'plot.json'), 'r') as file:
     python_dict = json.load(file)
 
 graph_1_data = python_dict['y']

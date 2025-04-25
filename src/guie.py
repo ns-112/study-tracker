@@ -8,8 +8,8 @@ import animations as anim
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
-textures_dir = f'{project_dir}\\textures\\'
-data_dir = f'{project_dir}\\data\\'
+textures_dir = os.path.join(project_dir, 'textures')
+data_dir = os.path.join(project_dir, "data")
 
 class button:
     def __init__(self, texture, screen, callback, pos, animation_length, scale_to):
@@ -17,7 +17,7 @@ class button:
         self.callback = callback
         self.length = animation_length
         self.clicked = False
-        self.animation_base = anim.object(pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha(), screen, pos, is_button = True)
+        self.animation_base = anim.object(pygame.image.load(os.path.join(textures_dir, texture + '.png')).convert_alpha(), screen, pos, is_button = True)
         self.animation_base.addAnimationTrack("s", [[0, 1, 1], [animation_length, scale_to, scale_to, "out_circ"], [0.05, scale_to - 0.1, scale_to - 0.1, "out_circ"]])
         print(self.animation_base.scale.__str__())
         
@@ -81,7 +81,7 @@ class gui_screen:
         self.active = active
 
     def create_static_texture(self, texture, pos = (0, 0)):
-        tex = pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha()
+        tex = pygame.image.load(os.path.join(textures_dir, f'{texture}.png')).convert_alpha()
         tex_rect = pygame.Rect(pos[0], pos[1], tex.get_rect()[2], tex.get_rect()[3])
         self.prio_queue.append((tex, tex_rect))
 
