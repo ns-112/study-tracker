@@ -32,7 +32,7 @@ class blank_popup:
         self.length = animation_length
         self.origin = (x, y)
         self.surface = screen
-        img = pygame.image.load(f'{textures_dir}popup_blank.png').convert_alpha()
+        img = pygame.image.load(os.path.join(textures_dir, 'popup_blank.png')).convert_alpha()
         self.popup_animation_base = anim.object(img, screen, (x, y), is_button = False)
         #self.popup_animation_base.addAnimationTrack("s", [[0, 0, 0], [animation_length, scale_to, scale_to, "out_circ"], [0.05, 1, 1, "out_circ"]])
         #img_size = (img.get_height(), img.get_width())
@@ -119,7 +119,7 @@ class gui_screen:
         if data != []:
             index = 0
             for y in data:
-                dot = anim.object(pygame.image.load(f"{textures_dir}dot.png"), self.surface, ((((700 // len(data)) * index) - 350), -100), False)
+                dot = anim.object(pygame.image.load(os.path.join(textures_dir, 'dot.png')), self.surface, ((((700 // len(data)) * index) - 350), -100), False)
                 dot.addAnimationTrack("p", [[0, 0, 0], [0.25, 0, 0], [0.75, 0, (y * 2), "in_out_sine"]])
                 index += 1
                 tmp_popup.graph.append(dot)
