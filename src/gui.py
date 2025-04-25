@@ -7,12 +7,9 @@ import timeline as tl
 import numpy as np
 import detect
 import threading
-<<<<<<< HEAD
 import json
-=======
 import cv2
 import AfterStudyGUI
->>>>>>> dev
 
 # Outback easing
 def ease_out_back(t, s=1.70158):
@@ -95,10 +92,6 @@ def capture_frames():
         totalTime = totalTime
         timeStampLen = timeStampLen
         timeStamps = timeStamps
-<<<<<<< HEAD
-=======
-    
->>>>>>> dev
 
 #button callbacks
 def b_close():
@@ -133,16 +126,10 @@ tracker = guie.gui_screen(screen, 2)
 
 
 #buttons
-<<<<<<< HEAD
 home.create_static_texture("bg")
 home.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
 home.create_button(b_graph, "graph", (-400, 230))
 home.create_button(b_start_demo, "tracking", (0,0))
-=======
-home.create_button(b_close, "exit", x = 25, y = 25)
-home.create_button(b_test, "stock", x = (pyautogui.size().width // 4), y = 500)
-home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
->>>>>>> dev
 
 
 

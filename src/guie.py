@@ -4,20 +4,13 @@ import numpy as np
 import pyautogui
 from PIL import Image
 import io
-<<<<<<< HEAD
+
 import animations as anim
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
 textures_dir = f'{project_dir}\\textures\\'
 data_dir = f'{project_dir}\\data\\'
-
-class button:
-    def __init__(self, texture, screen, callback, pos, animation_length, scale_to):
-=======
-src_dir = os.path.dirname(os.path.abspath(__file__))
-project_dir = os.path.dirname(src_dir)
-textures_dir = os.path.join(project_dir,'textures')
 popup_dir = os.path.join(textures_dir,'popup')
 
 class button:
@@ -26,7 +19,7 @@ class button:
         self.scale = (pygame.Surface.get_width(self.base) * scale, pygame.Surface.get_height(self.base) * scale)
         self.copy = self.base.convert_alpha()
         self.lerp = 0
->>>>>>> dev
+
         self.hover = False
         self.callback = callback
         self.length = animation_length
@@ -141,9 +134,7 @@ class gui_screen:
         self.popups.append(tmp_popup)
        
 
-<<<<<<< HEAD
-    
-=======
+
     def create_popup_button(self, text, index, width, height, scale, popup, pyfont = None, color = (255, 255, 255)):
         side_left = pygame.image.load(os.path.join(popup_dir,'text_button_side.png')).convert_alpha()
         side_right_pil = Image.open(os.path.join(popup_dir,'text_button_side.png')).convert("RGBA")
@@ -299,7 +290,6 @@ class gui_screen:
             0
 
         ]
->>>>>>> dev
 
 
     def kill_popup(self):
