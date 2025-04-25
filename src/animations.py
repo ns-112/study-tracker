@@ -22,7 +22,9 @@ class object:
         self.rotation = []
         #todo maybe
         self.skew = []
-
+        
+        self.opacity = []
+        self.attributes = [(0, 0), (0, 0)]
         self.surface = screen
         self.object = object
         self.object_copy = object
@@ -52,35 +54,45 @@ class object:
             self.rotation.append(animation)
         if (animation.anim_type == "sk"):
             self.skew.append(animation)
+        if (animation.anim_type == "o"):
+            self.opacity.append(animation)
         
     '''
     main function to call that updates keyframe values
     and renders object to screen
     '''
-    def updateObject(self, deltaTime, popups):
+    def updateObject(self, deltaTime, active_popups, blit = True):
         
         x_offset = self.object_rect[0]
         y_offset = self.object_rect[1]
         x = 0
         y = 0
-        if len(popups) == 0:
-            if (self.object_rect.collidepoint(pygame.mouse.get_pos())):
-                
-                self.is_hovering = True
+        if self.is_button:
+            if active_popups == 0:
+                if (self.object_rect.collidepoint(pygame.mouse.get_pos())):
+                    
+                    self.is_hovering = True
+                else:
+                    self.is_hovering = False
             else:
                 self.is_hovering = False
         else:
-            self.is_hovering = False
+            if (self.object_rect.collidepoint(pygame.mouse.get_pos())):    
+                self.is_hovering = True
+            else:
+                self.is_hovering = False
         for system in self.position:
             self.animateSystem(deltaTime, system)
             (x, y) = self.calculateTracks(system)
             x_offset += x
             y_offset += y
+        self.attributes[0] = (x_offset, y_offset)
         for system in self.scale:
             self.animateSystem(deltaTime, system)
             (x, y) = self.calculateTracks(system)
             x_offset += x
             y_offset += y
+        self.attributes[1] = (x_offset, y_offset)
         for system in self.rotation:
             self.animateSystem(deltaTime, system)
             (x, y) = self.calculateTracks(system)
@@ -92,7 +104,10 @@ class object:
             x_offset += x
             y_offset += y
         
-        self.surface.blit(self.object, (x_offset, y_offset))
+        if blit:
+            self.surface.blit(self.object, (x_offset, y_offset))
+        else:
+            return (x_offset, y_offset)
         
     '''
     update/linearly interpolate values based on keyframe's settings
@@ -200,6 +215,8 @@ class object:
             
         
         return (x, y)
+    
+ 
             
         
 
@@ -221,6 +238,7 @@ class animation(object):
                 self.addKeyframe(i[0], i[1], i[2], i[3])
             else:
                 self.addKeyframe(i[0], i[1], i[2])
+    
         
         
 
@@ -256,7 +274,16 @@ class animation(object):
                 break
         if len(self.processed_keyframes) > 0:
             new_key.length = new_key.time - self.processed_keyframes[-1].time
+        if self.anim_type == "o":
+            new_key.y1 = 0
+            new_key.y2 = 0
+
         self.processed_keyframes.append(new_key)
+    
+    def __str__(self):
+        return self.processed_keyframes[0]
+    
+    
 
 '''
 keyframe class that contains all the needed info for a keyframe

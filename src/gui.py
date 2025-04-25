@@ -6,8 +6,9 @@ import guie
 import timeline as tl
 import cv2
 import numpy as np
-import setup
+import detect
 import threading
+import json
 
 # Outback easing
 def ease_out_back(t, s=1.70158):
@@ -30,6 +31,16 @@ pygame.init()
 screen = pygame.display.set_mode((0, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA) 
 window = Window.from_display_module()
 clock = pygame.time.Clock()
+
+
+with open(f'{project_dir}\\data\\plot.json', 'r') as file:
+    python_dict = json.load(file)
+
+graph_1_data = python_dict['y']
+
+
+    
+
 
 
 #lerp value
@@ -64,8 +75,8 @@ frame_surface = None
 
 def capture_frames():
     global frame_surface
-    for frame in setup.eyeDetection():
-
+    for frame in detect.eyeDetection():
+        print("s")
         frame_surface = frame
  
 
@@ -78,9 +89,9 @@ def b_close():
         global commit_close
         commit_close = True
 
-def b_test():
+def b_graph():
     print("popup")
-    home.create_basic_popup(800, 400, None, b_change_page, button_1_name = "close", button_2_name = "page 2")
+    home.create_graph_popup(graph_1_data)
 
 def b_generic():
     print("button clicked")
@@ -93,6 +104,7 @@ def b_change_page():
 def b_start_demo():
     global current_page
     current_page = 2
+  
 
 #screens
 home = guie.gui_screen(screen, 0)
@@ -102,14 +114,18 @@ tracker = guie.gui_screen(screen, 2)
 
 #buttons
 home.create_static_texture("bg")
-home.create_button(screen, b_close, "exit", x = -(WIDTH / 2) + 35, y = (HEIGHT / 2) - 35)
-home.create_button(screen, b_test, "graph", x = -400, y = 230)
+home.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
+home.create_button(b_graph, "graph", (-400, 230))
+home.create_button(b_start_demo, "tracking", (0,0))
+
+
+
 #home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
 
 #settings.create_button(b_close, "exit", x = 25, y = 25)
 
 
-#tracker.create_button(b_close, "exit", x = 25, y = 25)
+tracker.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
 
 
 
@@ -149,13 +165,12 @@ while running:
 
 
     home.update(dt, click_event, release_event, current_page)
-    home.update_active_popups(dt, click_event, release_event)
-    settings.update(dt, click_event, release_event, current_page)
-    settings.update_active_popups(dt, click_event, release_event)
 
-    tracker.update_active_popups(dt, click_event, release_event)
+    settings.update(dt, click_event, release_event, current_page)
+
 
     if current_page == 2 and page_tracker == 0:
+        
         page_tracker += 1
         thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
