@@ -15,7 +15,7 @@ animation tracks which include
 keyframes
 '''
 class object:
-    def __init__(self, object, screen, origin = (0, 0), is_button = False):
+    def __init__(self, object, screen, origin = (0, 0), is_button = False, is_overlay = False):
         self.position = []
         self.scale = []    
         #todo   

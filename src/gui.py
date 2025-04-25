@@ -4,12 +4,12 @@ import pyautogui
 from pygame._sdl2.video import Window
 import guie
 import timeline as tl
+import cv2
 import numpy as np
 import detect
+from detect import eyeDetection
 import threading
 import json
-import cv2
-import AfterStudyGUI
 
 # Outback easing
 def ease_out_back(t, s=1.70158):
@@ -76,7 +76,7 @@ frame_surface = None
 
 def capture_frames():
     global frame_surface
-    global distractedSeconds
+    global distractedSecondss
     global totalTime
     global timeStamps
     global timeStampLen
@@ -88,7 +88,7 @@ def capture_frames():
             break
 
         frame_surface = frame
-        distractedSeconds = distractedSeconds
+        distractedSecondss = distractedSeconds
         totalTime = totalTime
         timeStampLen = timeStampLen
         timeStamps = timeStamps
@@ -144,8 +144,6 @@ tracker.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
 
 page_tracker = 0
 
-thread = threading.Thread(target=capture_frames, daemon=True)
-stop = False
 
 
 
@@ -187,10 +185,11 @@ while running:
     if current_page == 2 and page_tracker == 0:
         
         page_tracker += 1
+        thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
-    
+   
     tracker.update(dt, click_event, release_event, current_page, frame_surface)
-    
+ 
     
     
     pygame.display.flip()
@@ -248,5 +247,6 @@ while running:
     
     elapsed_time += dt
     
+
 pygame.quit()
 stop = True
