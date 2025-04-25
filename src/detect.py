@@ -1,4 +1,3 @@
-
 import cv2 as cv
 import dlib
 import numpy as np
@@ -106,7 +105,3 @@ def eyeDetection():
         frame_rgb = np.flipud(frame_rgb)
         end = time.time()
         yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime,end-start,timeStamps, timeStampLen
-
-
-            
-

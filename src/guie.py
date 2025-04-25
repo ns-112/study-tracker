@@ -4,9 +4,13 @@ import numpy as np
 import pyautogui
 from PIL import Image
 import io
+
+import animations as anim
+
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
-textures_dir = os.path.join(project_dir,'textures')
+textures_dir = f'{project_dir}\\textures\\'
+data_dir = f'{project_dir}\\data\\'
 popup_dir = os.path.join(textures_dir,'popup')
 
 class button:
@@ -15,49 +19,121 @@ class button:
         self.scale = (pygame.Surface.get_width(self.base) * scale, pygame.Surface.get_height(self.base) * scale)
         self.copy = self.base.convert_alpha()
         self.lerp = 0
+
         self.hover = False
         self.callback = callback
         self.length = animation_length
-
-        if x <= self.scale[0]:
-            x = (self.scale[0] / 2) + 5
-        if y <= self.scale[1]:
-            y = (self.scale[1] / 2) + 5
-
-        self.pos = (x, y)
-        self.rect = pygame.Rect(x, y, self.scale[0], self.scale[1])
         self.clicked = False
+        self.animation_base = anim.object(pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha(), screen, pos, is_button = True)
+        self.animation_base.addAnimationTrack("s", [[0, 1, 1], [animation_length, scale_to, scale_to, "out_circ"], [0.05, scale_to - 0.1, scale_to - 0.1, "out_circ"]])
+        print(self.animation_base.scale.__str__())
+        
+
+
+class blank_popup:
+    def __init__(self, screen, type, buttons, x, y, animation_length, scale_to, close_callback):
+        if len(buttons) > 0:
+            pass
+        self.buttons = []
+        self.active = False
+        self.length = animation_length
+        self.origin = (x, y)
+        self.surface = screen
+        img = pygame.image.load(f'{textures_dir}popup_blank.png').convert_alpha()
+        self.popup_animation_base = anim.object(img, screen, (x, y), is_button = False)
+        #self.popup_animation_base.addAnimationTrack("s", [[0, 0, 0], [animation_length, scale_to, scale_to, "out_circ"], [0.05, 1, 1, "out_circ"]])
+        #img_size = (img.get_height(), img.get_width())
+        self.create_button(close_callback, "exit", (200, 0), scale = 1.15, animation_length = 0.08)
+        self.overlay = anim.object(pygame.Surface((self.surface.get_width(), self.surface.get_height()), pygame.SRCALPHA), screen, (0, 0), False, is_overlay = True)
+        self.overlay = pygame.Surface((self.surface.get_width(), self.surface.get_height()), pygame.SRCALPHA)
+        self.overlay.fill((0, 0, 0))
+        self.overlay.set_alpha(0)
+        
+        self.graph = []
+    
+    def create_button(
+            self,
+            callback,                  
+            texture,    
+            pos = (0, 0),                      
+            layout = (-1, -1),                
+            scale = 1.15,                  
+            animation_length = 0.08     
+            ):
+        
+        temp_button = button(texture, self.surface, callback, pos, animation_length, scale)
+        if (layout[0] != -1): #column
+            if (len(self.buttons) > 0):
+                temp_button.animation_base.object_rect[0] = (((self.buttons[-1].animation_base.object_rect[2]) + self.buttons[-1].animation_base.object_rect[0]) * layout[0]) + 35
+                
+        if (layout[1] != -1): #row
+            if (len(self.buttons) > 0):
+                temp_button.animation_base.object_rect[1] = (((self.buttons[-1].animation_base.object_rect[3]) + self.buttons[-1].animation_base.object_rect[1]) * layout[1]) + 35
+       
+            
+        self.buttons.append(temp_button)
+        
+        
+        
 
 
 
 class gui_screen:
     def __init__(self, screen, page = 0, active = True):
         self.page = page
+        self.prio_queue = []
         self.buttons = []
-        self.active_popups = {}
+        self.popups = []
         self.surface = screen
         self.active = active
 
+    def create_static_texture(self, texture, pos = (0, 0)):
+        tex = pygame.image.load(f'{textures_dir}{texture}.png').convert_alpha()
+        tex_rect = pygame.Rect(pos[0], pos[1], tex.get_rect()[2], tex.get_rect()[3])
+        self.prio_queue.append((tex, tex_rect))
+
+    def update_prio_queue(self):
+        if len(self.prio_queue) > 0:
+            for tx in self.prio_queue:
+                self.surface.blit(tx[0], tx[1])
+
     def create_button(
-            self, 
-            
+            self,
             callback,                  
             texture,    
-            
-            x = 0,                     
-            y = 0,                      
-            column = 0,                
-            row = 0,                   
-           
-            scale = 1,                  
-            animation_length = 0.5      
+            pos = (0, 0),                      
+            layout = (-1, -1),                
+            scale = 1.15,                  
+            animation_length = 0.08     
             ):
         
-        temp_button = button(texture, callback, x, y, column, row, scale, animation_length)
+        temp_button = button(texture, self.surface, callback, pos, animation_length, scale)
+        if (layout[0] != -1): #column
+            if (len(self.buttons) > 0):
+                temp_button.animation_base.object_rect[0] = (((self.buttons[-1].animation_base.object_rect[2]) + self.buttons[-1].animation_base.object_rect[0]) * layout[0]) + 35
+                
+        if (layout[1] != -1): #row
+            if (len(self.buttons) > 0):
+                temp_button.animation_base.object_rect[1] = (((self.buttons[-1].animation_base.object_rect[3]) + self.buttons[-1].animation_base.object_rect[1]) * layout[1]) + 35
+       
+            
         self.buttons.append(temp_button)
         
 
+    def create_graph_popup(self, data):
+        tmp_popup = blank_popup(self.surface, "g", [], 0, 0, 0, 1, self.kill_popup)
         
+        if data != []:
+            index = 0
+            for y in data:
+                dot = anim.object(pygame.image.load(f"{textures_dir}dot.png"), self.surface, ((((400 // len(data)) * index) - 200), -100), False)
+                dot.addAnimationTrack("p", [[0, 0, 0], [0.25, 0, 0], [0.75, 0, (y * 2), "in_out_sine"]])
+                index += 1
+                tmp_popup.graph.append(dot)
+        tmp_popup.active = True
+        self.popups.append(tmp_popup)
+       
+
 
     def create_popup_button(self, text, index, width, height, scale, popup, pyfont = None, color = (255, 255, 255)):
         side_left = pygame.image.load(os.path.join(popup_dir,'text_button_side.png')).convert_alpha()
@@ -217,9 +293,8 @@ class gui_screen:
 
 
     def kill_popup(self):
+        del self.popups[-1]
 
-        del self.active_popups
-        self.active_popups = {}
 
     
 
@@ -227,202 +302,108 @@ class gui_screen:
     def update(self, deltatime, event1, event2, screen, frame = None, boxes = None):
         
         if self.page == screen:
-            if (len(self.active_popups) == 0):
-                #hover
+            active_popups = 0
+
+            for popup in self.popups:
+                if popup.active:
+                    active_popups += 1
+                else:
+                    break
+            if (active_popups == 0):
+                
                 for button in self.buttons:
-                    if pygame.Rect(button.pos[0], button.pos[1], button.scale[0], button.scale[1]).collidepoint(pygame.mouse.get_pos()) and self.active:
+                    if button.animation_base.object_rect.collidepoint(pygame.mouse.get_pos()) and self.active:
                         button.hover = True
                     else:
                         button.hover = False
                 
-                for button in self.buttons:
-                    if button.hover:
-                        if button.lerp < (button.length / 10):
-                        
-                            button.lerp += deltatime
-                    else:
-                        if button.lerp > 0:
-                            button.lerp -= deltatime
-            else: 
-                for button in self.buttons:
-                    button.hover = False
-                    if button.lerp > 0:
-                            button.lerp -= deltatime
 
-            #hover scale
-            for button in self.buttons:
-                t = button.lerp / (button.length / 10)
-                t = max(0, min(t, 1))  
-                eased_t = out_circ(t)
-                new_width = lerp(button.scale[0], button.scale[0] * 1.25, eased_t)
-                new_height = lerp(button.scale[1], button.scale[1] * 1.25, eased_t)
-                button.base = pygame.transform.smoothscale(button.copy, (int(new_width), int(new_height)))
-                center = button.base.get_rect().center
-                button.rect = pygame.Rect(button.pos[0] - ((button.base.get_rect()[2] - button.scale[0]) / 2), button.pos[1] - ((button.base.get_rect()[3] - button.scale[1]) / 2), button.rect[2], button.rect[3])
-                #change in scale /2
-            
-            if (len(self.active_popups) == 0):
-                #click
+
                 for button in self.buttons:
                     if (button.hover and (event1 or button.clicked)):
                         button.clicked = True
-                        t = button.lerp / (button.length / 10)
-                        t = max(0, min(t, 1))  
-                        eased_t = out_circ(t)
-                        new_width = lerp(button.scale[0], button.scale[0] * 1.1, eased_t)
-                        new_height = lerp(button.scale[1], button.scale[1] * 1.1, eased_t)
-                        button.base = pygame.transform.smoothscale(button.copy, (int(new_width), int(new_height)))
-                        center = button.base.get_rect().center
-                        button.rect = pygame.Rect(button.pos[0] - ((button.base.get_rect()[2] - button.scale[0]) / 2), button.pos[1] - ((button.base.get_rect()[3] - button.scale[1]) / 2), button.rect[2], button.rect[3])
-
+                        button.animation_base.l_mouse_down = True
+                        
                         if event2:
-                            button.clicked = False
-                            event2 = False
-                            event1 = False
-                            button.hover = False
-                            button.callback()
+                                button.animation_base.l_mouse_down = False
+                                button.clicked = False
+                                event2 = False
+                                event1 = False
+                                button.hover = False
+                                button.callback()
+                                
                     else:
+                        button.animation_base.l_mouse_down = False
                         button.clicked = False
+            
+
             else:
                 for button in self.buttons:
                     button.clicked = False
-                
-            
-
-
-            #render
-            
-            self.surface.fill((0, 0, 0))
-            if self.page == 2 and frame is not None:
-                self.surface.blit(frame, (frame.get_width() / 2, frame.get_height() / 4))
-
+            if len(self.prio_queue) > 0:
+                for prio in self.prio_queue:
+                    self.surface.blit(prio[0], prio[1])
+            else:
+                self.surface.fill((0, 0, 0))
             for button in self.buttons:
-                
-                self.surface.blit(button.base, button.rect)
-        
-
-    def update_active_popups(self, dt, event1, event2):
-        
-
-        
-        # Fade overlay in popups
-        for name, data in self.active_popups.items():
-            if data[5] < data[6]:
-                data[5] += dt
-            if data[6] < 128:
-                t = data[5] / (data[6])
-                t = max(0, min(t, 1))
-                eased_t = out_circ(t)
-                data[7] = lerp(0, 128, eased_t)
-                data[2].set_alpha(data[7])
-
-        #hover
-            for name, data in self.active_popups.items():
-                if pygame.Rect(data[0][9][0] - (data[0][6].get_rect()[2] //2), data[0][9][1] - (data[0][6].get_rect()[3] // 2), data[0][4][0], data[0][4][1]).collidepoint(pygame.mouse.get_pos()) and self.active:
-                    data[0][2] = True
-                else:
-                    data[0][2] = False
-
-                if pygame.Rect(data[1][9][0] - (data[1][6].get_rect()[2] //2), data[1][9][1] - (data[1][6].get_rect()[3] // 2), data[1][4][0], data[1][4][1]).collidepoint(pygame.mouse.get_pos()) and self.active:
-                    data[1][2] = True
-                else:
-                    data[1][2] = False
-            
-            for name, data in self.active_popups.items():
-                if data[0][2]:
-                    if data[0][1] < (data[0][7] / 10):
+                button.animation_base.updateObject(deltatime, active_popups)
+            if frame != None:
+                self.surface.blit(frame, (1280/4, 720/4))
+            for popup in self.popups:
+                if popup.active:
                     
-                        data[0][1] += dt
-                else:
-                    if data[0][1] > 0:
-                        data[0][1] -= dt
-                
-                if data[1][2]:
-                    if data[1][1] < (data[1][7] / 10):
+                    for button in popup.buttons:
+                      
+                        if button.animation_base.object_rect.collidepoint(pygame.mouse.get_pos()):
+                            button.hover = True
+                        else:
+                            button.hover = False
+
+
+                    for button in popup.buttons:
+                        if (button.hover and (event1 or button.clicked)):
+                            button.clicked = True
+                            button.animation_base.l_mouse_down = True
+                            
+                            if event2:
+                                    button.animation_base.l_mouse_down = False
+                                    button.clicked = False
+                                    event2 = False
+                                    event1 = False
+                                    button.hover = False
+                                    button.callback()
+                                    
+                        else:
+                            button.animation_base.l_mouse_down = False
+                            button.clicked = False
                     
-                        data[1][1] += dt
-                else:
-                    if data[1][1] > 0:
-                        data[1][1] -= dt
-        
 
-         #hover scale
-        for name, data in self.active_popups.items():
-            t = data[0][1] / (data[0][7] / 10)
-            t = max(0, min(t, 1))  
-            eased_t = out_circ(t)
-            new_width = lerp(data[0][4][0], data[0][4][0] * 1.25, eased_t)
-            new_height = lerp(data[0][4][1], data[0][4][1] * 1.25, eased_t)
-            data[0][0] = pygame.transform.smoothscale(data[0][6], (int(new_width), int(new_height)))
-            data[0][8] = data[0][0].get_rect().center
-            data[0][5] = pygame.Rect((data[0][0].get_rect()[0] - (data[0][8][0])) + data[0][9][0], (data[0][0].get_rect()[1] - (data[0][8][1])) + data[0][9][1], data[0][5][2], data[0][5][3]) 
+
+                    popup.popup_animation_base.updateObject(deltatime, active_popups)
+                    for button in popup.buttons:
+                        
+                        button.animation_base.updateObject(deltatime, active_popups)
+                    index = 0
+                    for point in popup.graph:
+                        point.updateObject(deltatime, active_popups)
+                        if index < len(popup.graph) - 1:
+                            pygame.draw.line(self.surface, (255, 255, 255), (point.attributes[0][0] + (point.object_rect[2] // 2), point.attributes[0][1] + (point.object_rect[3] // 2)), (popup.graph[index + 1].attributes[0][0] + (popup.graph[index + 1].object_rect[2] // 2), popup.graph[index + 1].attributes[0][1] + (popup.graph[index + 1].object_rect[3] // 2)))
+                        index += 1
+                   
+                        
+                else:
+                    break
+                
+
             
-            t = data[1][1] / (data[1][7] / 10)
-            t = max(0, min(t, 1))  
-            eased_t = out_circ(t)
-            new_width = lerp(data[1][4][0], data[1][4][0] * 1.25, eased_t)
-            new_height = lerp(data[1][4][1], data[1][4][1] * 1.25, eased_t)
-            data[1][0] = pygame.transform.smoothscale(data[1][6], (int(new_width), int(new_height)))
-            data[1][8] = data[1][0].get_rect().center
-            data[1][5] = pygame.Rect((data[1][0].get_rect()[0] - (data[1][8][0])) + data[1][9][0], (data[1][0].get_rect()[1] - (data[1][8][1])) + data[1][9][1], data[1][5][2], data[1][5][3]) 
-            
-        #click
-            for name, data in self.active_popups.items():
-                if (data[0][2] and (event1 or data[0][10])):
-                    data[0][10] = True
-                    t = data[0][1] / (data[0][7] / 10)
-                    t = max(0, min(t, 1))  
-                    eased_t = out_circ(t)
-                    new_width = lerp(data[0][4][0], data[0][4][0] * 1.1, eased_t)
-                    new_height = lerp(data[0][4][1], data[0][4][1] * 1.1, eased_t)
-                    data[0][0] = pygame.transform.smoothscale(data[0][6], (int(new_width), int(new_height)))
-                    data[0][8] = data[0][0].get_rect().center
-                    data[0][5] = pygame.Rect((data[0][0].get_rect()[0] - (data[0][8][0])) + data[0][9][0], (data[0][0].get_rect()[1] - (data[0][8][1])) + data[0][9][1], data[0][5][2], data[0][5][3]) 
-                    if event2:
-                        data[0][10] = False
-                        event2 = False
-                        event1 = False
-                        data[0][2] = False
-                        data[0][3]()
-                else:
-                    data[0][10] = False
+    def update_popups(self, dt, event1, event2):
+        for popup in self.popups:
+            if popup.active:
+                pass
+            else:
+                break
 
-                if (data[1][2] and (event1 or data[1][10])):
-                    data[1][10] = True
-                    t = data[1][1] / (data[1][7] / 10)
-                    t = max(0, min(t, 1))  
-                    eased_t = out_circ(t)
-                    new_width = lerp(data[1][4][0], data[1][4][0] * 1.1, eased_t)
-                    new_height = lerp(data[1][4][1], data[1][4][1] * 1.1, eased_t)
-                    data[1][0] = pygame.transform.smoothscale(data[1][6], (int(new_width), int(new_height)))
-                    data[1][8] = data[1][0].get_rect().center
-                    data[1][5] = pygame.Rect((data[1][0].get_rect()[0] - (data[1][8][0])) + data[1][9][0], (data[1][0].get_rect()[1] - (data[1][8][1])) + data[1][9][1], data[1][5][2], data[1][5][3]) 
-                    if event2:
-                        data[1][10] = False
-                        event2 = False
-                        event1 = False
-                        data[1][2] = False
-                        data[1][3]()
-                else:
-                    data[1][10] = False
-        
-
-        #render
-        for name, data in self.active_popups.items():
-            self.surface.blit(data[2], data[2].get_rect())
-            self.surface.blit(data[3], pygame.Rect(
-                self.surface.get_width() // 2 - (data[3].get_rect()[2] // 2),
-                self.surface.get_height() // 2 - (data[3].get_rect()[3] // 2),
-                data[3].get_rect()[2],
-                data[3].get_rect()[3]))
-            self.surface.blit(data[4], pygame.Rect(
-                self.surface.get_width() // 2 - (data[4].get_rect()[2] // 2),
-                self.surface.get_height() // 2 - (data[4].get_rect()[3] // 2),
-                data[4].get_rect()[2],
-                data[4].get_rect()[3]))
-            self.surface.blit(data[0][0].convert_alpha(), data[0][5])
-            self.surface.blit(data[1][0].convert_alpha(), data[1][5])
-        
+    
 
 
 screens = {

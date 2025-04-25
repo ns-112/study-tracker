@@ -109,4 +109,3 @@ def Graph(disTime,totTime,stamps,stamplen):
 
 
 
-
