@@ -1,28 +1,58 @@
-
 import cv2 as cv
 import dlib
 import numpy as np
 import pygame
 import os
-
+from time import sleep
+import time
 def eyeDetection():
-    
+    cam = cv.VideoCapture(0)
     src_dir = os.path.dirname(os.path.abspath(__file__))
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor(os.path.join(src_dir,"shape_predictor_68_face_landmarks.dat"))
+    unfocused = False
+    unfocusedTime = 0
+    timestampNum = 0
+    timeStamps = {}
+    timeStampLen = {}
+    timeStampStart = 0
+    timeStampEnd = 0
+    noFace = False
 
 
-    cam = cv.VideoCapture(0)
+    start = time.time()
     while True:
         ret,frame = cam.read()
+        out = cv.VideoWriter('out.mp4',cv.VideoWriter_fourcc(*'mp4v'), 20.0,(640,480))
+        out.write(frame)
+
         gray = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
         gray = cv.equalizeHist(gray)
         faces=detector(gray)
-        if (len(faces) == 0):
-            cv.putText(frame, str("No Face Detected"), (125, 100), 5, 2, (255, 255, 255), 2)
+
+        height,width, _= frame.shape
+        if(noFace):
+            if (noFace and len(faces) == 0):
+                cv.putText(frame, str("No Face Detected"), (125, 400), 5, 2, (255, 255, 255), 2)
+                unfocusedTime += 0.1
+                sleep(0.1)
+            else: 
+                noFace = False
+                timeStampEnd = time.time()
+                if ((timeStampEnd - timeStampStart) > 1):
+                    timeStamps[f"{timestampNum}"] = f"{round((timeStampStart - start), 2)} - {round((timeStampEnd - start), 2)}"
+                    timeStampLen[f"{timestampNum}"] = round((timeStampEnd - timeStampStart), 2)
+                    timeStampStart = 0
+                    timestampNum += 1
+
+
+        elif (len(faces) == 0):
+            cv.putText(frame, str("No Face Detected"), (125, 400), 5, 2, (255, 255, 255), 2)
+            noFace = True
+            timeStampStart = time.time()
+        
         for face in faces:
             landmarks= predictor(gray,face)
-            height,width, _= frame.shape
             mask = np.zeros((height,width), np.uint8)
             leftEyeRegion = np.array([(landmarks.part(36).x,landmarks.part(36).y),
                                       (landmarks.part(37).x,landmarks.part(37).y),
@@ -51,21 +81,27 @@ def eyeDetection():
             else:
                 gazeRation = leftSideWhite/rightSideWhite
 
-            if (gazeRation > 3):
-                cv.putText(frame, str("Looking Left"), (125, 100), 5, 2, (255, 255, 255), 2)
-            elif (gazeRation < 1):
-                cv.putText(frame, str("Looking Right"), (125, 100), 5, 2, (255, 255, 255), 2)
-            else:
-                cv.putText(frame, str("Looking Center"), (125, 100), 5, 2, (255, 255, 255), 2)
+            
+            if (unfocused):
+                if (gazeRation > 3 or gazeRation < 1):
+                    unfocusedTime += 0.1
+                    sleep(0.1)
+                else:
+                    unfocused = False
+                    timeStampEnd = time.time()
+                    if ((timeStampEnd - timeStampStart) > 1):
+                        timeStamps[f"{timestampNum}"] = f"{round((timeStampStart - start), 2)} - {round((timeStampEnd - start), 2)}"
+                        timeStampLen[f"{timestampNum}"] = round((timeStampEnd - timeStampStart), 2)
+                        timeStampStart = 0
+                        timestampNum += 1
+            elif (gazeRation > 3 or gazeRation < 1):
+                unfocused = True
+                timeStampStart = time.time()
 
 
+        cv.putText(frame, str(f"Unfocused Time: {unfocusedTime}"), (125, 100), 5, 2, (255, 255, 255), 2)
         frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
         frame_rgb = np.rot90(frame_rgb)
         frame_rgb = np.flipud(frame_rgb)
-        yield pygame.surfarray.make_surface(frame_rgb)
-
-            
-
-        if cv.waitKey(1) == ord('q'):
-            break
-    cam.release()
+        end = time.time()
+        yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime,end-start,timeStamps, timeStampLen

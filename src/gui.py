@@ -6,8 +6,10 @@ import guie
 import timeline as tl
 import cv2
 import numpy as np
+import detect
 from detect import eyeDetection
 import threading
+import json
 
 # Outback easing
 def ease_out_back(t, s=1.70158):
@@ -20,15 +22,26 @@ def ease_in_back(t, s=1.70158):
 
 WIDTH = 1280
 HEIGHT = 720
+window_anims = False
 BASE_POS = (pyautogui.size().width // 2 - (WIDTH / 2), (pyautogui.size().height // 2) - (HEIGHT / 2))
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
 
 pygame.init()
-screen = pygame.display.set_mode((0, HEIGHT), flags=pygame.RESIZABLE | pygame.NOFRAME | pygame.SRCALPHA) 
+screen = pygame.display.set_mode((0, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA) 
 window = Window.from_display_module()
 clock = pygame.time.Clock()
+
+
+with open(f'{project_dir}\\data\\plot.json', 'r') as file:
+    python_dict = json.load(file)
+
+graph_1_data = python_dict['y']
+
+
+    
+
 
 
 #lerp value
@@ -56,17 +69,29 @@ timeline.add_event(0.6, "end_open")
 timeline.add_event(-1, "start_close") #set to -1 to unbind it
 timeline.add_event(-1, "end_close") #set to -1 to unbind it
 
-
+stop = False
 frame = None
 frame_surface = None
 
 
 def capture_frames():
     global frame_surface
-    for frame in eyeDetection():
+    global distractedSecondss
+    global totalTime
+    global timeStamps
+    global timeStampLen
+    width = 640
+    height = 480
+
+    for frame,distractedSeconds,totalTime,timeStamps,timeStampLen in detect.eyeDetection():
+        if(stop):
+            break
 
         frame_surface = frame
-    
+        distractedSecondss = distractedSeconds
+        totalTime = totalTime
+        timeStampLen = timeStampLen
+        timeStamps = timeStamps
 
 #button callbacks
 def b_close():
@@ -77,9 +102,9 @@ def b_close():
         global commit_close
         commit_close = True
 
-def b_test():
+def b_graph():
     print("popup")
-    home.create_basic_popup(800, 400, None, b_change_page, button_1_name = "close", button_2_name = "page 2")
+    home.create_graph_popup(graph_1_data)
 
 def b_generic():
     print("button clicked")
@@ -92,6 +117,7 @@ def b_change_page():
 def b_start_demo():
     global current_page
     current_page = 2
+  
 
 #screens
 home = guie.gui_screen(screen, 0)
@@ -100,13 +126,19 @@ tracker = guie.gui_screen(screen, 2)
 
 
 #buttons
-home.create_button(b_close, "exit", x = 25, y = 25)
-home.create_button(b_test, "stock", x = (pyautogui.size().width // 4), y = 500)
-home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
+home.create_static_texture("bg")
+home.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
+home.create_button(b_graph, "graph", (-400, 230))
+home.create_button(b_start_demo, "tracking", (0,0))
 
-settings.create_button(b_close, "exit", x = 25, y = 25)
 
-tracker.create_button(b_close, "exit", x = 25, y = 25)
+
+#home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
+
+#settings.create_button(b_close, "exit", x = 25, y = 25)
+
+
+tracker.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
 
 
 
@@ -143,21 +175,21 @@ while running:
         
         if (event.type == pygame.QUIT):
             running = False
-    
-    home.update(dt, click_event, release_event, current_page)
-    home.update_active_popups(dt, click_event, release_event)
-    settings.update(dt, click_event, release_event, current_page)
-    settings.update_active_popups(dt, click_event, release_event)
 
-    tracker.update_active_popups(dt, click_event, release_event)
+
+    home.update(dt, click_event, release_event, current_page)
+
+    settings.update(dt, click_event, release_event, current_page)
+
 
     if current_page == 2 and page_tracker == 0:
+        
         page_tracker += 1
         thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
-    
+   
     tracker.update(dt, click_event, release_event, current_page, frame_surface)
-    
+ 
     
     
     pygame.display.flip()
@@ -165,20 +197,29 @@ while running:
 
     #opening and closing animation
     
-    if (elapsed_time >= timeline.events["start_open"] and elapsed_time <= timeline.events["end_open"]):
-        opening = True
-        transition_time += dt
-    elif (elapsed_time > timeline.events["end_open"] and not commit_close):
-        opening = False
-        transition_time = 0
-    
-    if (elapsed_time >= timeline.events["start_close"] and elapsed_time <= timeline.events["end_close"] and commit_close and release_event):
+    if (window_anims):
+        if (elapsed_time >= timeline.events["start_open"] and elapsed_time <= timeline.events["end_open"]):
+            opening = True
+            transition_time += dt
+        elif (elapsed_time > timeline.events["end_open"] and not commit_close):
+            opening = False
+            transition_time = 0
         
-        closing = True
-        transition_time += dt
-    elif(elapsed_time > timeline.events["end_close"] and timeline.events["start_close"] != -1):
-        closing = False
-        transition_time = 0
+        if (elapsed_time >= timeline.events["start_close"] and elapsed_time <= timeline.events["end_close"] and commit_close and release_event):
+            
+            closing = True
+            transition_time += dt
+        elif(elapsed_time > timeline.events["end_close"] and timeline.events["start_close"] != -1):
+            closing = False
+            transition_time = 0
+    else:
+        opening = False
+        if elapsed_time == 0:
+            screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA) 
+            window.position = ( BASE_POS[0], BASE_POS[1])
+        if commit_close and release_event:
+            running = False
+            closing = False
         
     
 
@@ -208,3 +249,4 @@ while running:
     
 
 pygame.quit()
+stop = True
