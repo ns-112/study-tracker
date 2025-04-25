@@ -185,6 +185,8 @@ class gui_screen:
                 self.surface.fill((0, 0, 0))
             for button in self.buttons:
                 button.animation_base.updateObject(deltatime, active_popups)
+            if frame != None:
+                self.surface.blit(frame, (1280/4, 720/4))
             for popup in self.popups:
                 if popup.active:
                     

@@ -68,17 +68,29 @@ timeline.add_event(0.6, "end_open")
 timeline.add_event(-1, "start_close") #set to -1 to unbind it
 timeline.add_event(-1, "end_close") #set to -1 to unbind it
 
-
+stop = False
 frame = None
 frame_surface = None
 
 
 def capture_frames():
     global frame_surface
-    for frame in detect.eyeDetection():
-        print("s")
+    global distractedSeconds
+    global totalTime
+    global timeStamps
+    global timeStampLen
+    width = 640
+    height = 480
+
+    for frame,distractedSeconds,totalTime,timeStamps,timeStampLen in detect.eyeDetection():
+        if(stop):
+            break
+
         frame_surface = frame
- 
+        distractedSeconds = distractedSeconds
+        totalTime = totalTime
+        timeStampLen = timeStampLen
+        timeStamps = timeStamps
 
 #button callbacks
 def b_close():
@@ -236,3 +248,4 @@ while running:
     
 
 pygame.quit()
+stop = True
