@@ -4,11 +4,15 @@ import pyautogui
 from pygame._sdl2.video import Window
 import guie
 import timeline as tl
-import cv2
 import numpy as np
 import detect
 import threading
+<<<<<<< HEAD
 import json
+=======
+import cv2
+import AfterStudyGUI
+>>>>>>> dev
 
 # Outback easing
 def ease_out_back(t, s=1.70158):
@@ -91,6 +95,10 @@ def capture_frames():
         totalTime = totalTime
         timeStampLen = timeStampLen
         timeStamps = timeStamps
+<<<<<<< HEAD
+=======
+    
+>>>>>>> dev
 
 #button callbacks
 def b_close():
@@ -125,10 +133,16 @@ tracker = guie.gui_screen(screen, 2)
 
 
 #buttons
+<<<<<<< HEAD
 home.create_static_texture("bg")
 home.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
 home.create_button(b_graph, "graph", (-400, 230))
 home.create_button(b_start_demo, "tracking", (0,0))
+=======
+home.create_button(b_close, "exit", x = 25, y = 25)
+home.create_button(b_test, "stock", x = (pyautogui.size().width // 4), y = 500)
+home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
+>>>>>>> dev
 
 
 
@@ -143,6 +157,8 @@ tracker.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
 
 page_tracker = 0
 
+thread = threading.Thread(target=capture_frames, daemon=True)
+stop = False
 
 
 
@@ -184,11 +200,10 @@ while running:
     if current_page == 2 and page_tracker == 0:
         
         page_tracker += 1
-        thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
-   
+    
     tracker.update(dt, click_event, release_event, current_page, frame_surface)
- 
+    
     
     
     pygame.display.flip()
@@ -246,6 +261,5 @@ while running:
     
     elapsed_time += dt
     
-
 pygame.quit()
 stop = True
