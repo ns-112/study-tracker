@@ -10,7 +10,6 @@ import detect
 from detect import eyeDetection
 import threading
 import json
-
 # Outback easing
 def ease_out_back(t, s=1.70158):
     t -= 1
@@ -19,7 +18,6 @@ def ease_out_back(t, s=1.70158):
 # Back-in easing
 def ease_in_back(t, s=1.70158):
     return t * t * ((s + 1) * t - s)
-
 WIDTH = 1280
 HEIGHT = 720
 window_anims = False
@@ -80,8 +78,6 @@ def capture_frames():
     global totalTime
     global timeStamps
     global timeStampLen
-    width = 640
-    height = 480
 
     for frame,distractedSeconds,totalTime,timeStamps,timeStampLen in detect.eyeDetection():
         if(stop):
@@ -157,11 +153,7 @@ page_tracker = 0
 
 
 
-
 while running:
-
-    
-
 
     for event in pygame.event.get():
         if (event.type == pygame.MOUSEBUTTONDOWN and not click_event):
@@ -176,6 +168,15 @@ while running:
         if (event.type == pygame.QUIT):
             running = False
 
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                running = False
+            elif event.key == pygame.K_SPACE:
+                if os.path.exists("paused"):
+                    os.remove("paused")
+                else:
+                     f = open("paused", "w") 
+
 
     home.update(dt, click_event, release_event, current_page)
 
@@ -185,8 +186,11 @@ while running:
     if current_page == 2 and page_tracker == 0:
         
         page_tracker += 1
+
         thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
+        
+
    
     tracker.update(dt, click_event, release_event, current_page, frame_surface)
  
@@ -247,6 +251,8 @@ while running:
     
     elapsed_time += dt
     
-
-pygame.quit()
 stop = True
+if os.path.exists("paused"):
+    os.remove("paused")
+pygame.quit()
+
