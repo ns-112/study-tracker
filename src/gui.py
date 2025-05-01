@@ -10,6 +10,7 @@ import detect
 from detect import eyeDetection
 import threading
 import json
+import animations as anim
 
 # Outback easing
 def ease_out_back(t, s=1.70158):
@@ -27,6 +28,7 @@ BASE_POS = (pyautogui.size().width // 2 - (WIDTH / 2), (pyautogui.size().height 
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
+textures_dir = os.path.join(project_dir, 'textures')
 
 pygame.init()
 screen = pygame.display.set_mode((0, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA) 
@@ -76,7 +78,7 @@ frame_surface = None
 
 def capture_frames():
     global frame_surface
-    global distractedSecondss
+    global distractedSeconds
     global totalTime
     global timeStamps
     global timeStampLen
@@ -88,7 +90,7 @@ def capture_frames():
             break
 
         frame_surface = frame
-        distractedSecondss = distractedSeconds
+        distractedSeconds = distractedSeconds
         totalTime = totalTime
         timeStampLen = timeStampLen
         timeStamps = timeStamps
@@ -117,6 +119,14 @@ def b_change_page():
 def b_start_demo():
     global current_page
     current_page = 2
+
+def b_home():
+    global current_page
+    current_page = 0
+    global stop
+    stop = True
+    global page_tracker
+    page_tracker= 0
   
 
 #screens
@@ -128,9 +138,11 @@ tracker = guie.gui_screen(screen, 2)
 #buttons
 home.create_static_texture("bg")
 home.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
+#home.buttons[0].animation_base.addAnimationTrack("sk", [[0, 0, 0], [1, 0, 0]])
 home.create_button(b_graph, "graph", (-400, 230))
-home.create_button(b_start_demo, "tracking", (0,0))
-
+home.create_button(b_start_demo, "tracking", (0, 0))
+obj = anim.object(pygame.image.load(os.path.join(textures_dir, 'exit.png')).convert_alpha(), screen, (0, 0))
+obj.addAnimationTrack("sk", [[0, 1, 1], [3, 20, 0.4]], loop=True)
 
 
 #home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
@@ -138,13 +150,11 @@ home.create_button(b_start_demo, "tracking", (0,0))
 #settings.create_button(b_close, "exit", x = 25, y = 25)
 
 
-tracker.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
+tracker.create_button(b_home, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
 
 
 
 page_tracker = 0
-
-
 
 
 
@@ -178,7 +188,7 @@ while running:
 
 
     home.update(dt, click_event, release_event, current_page)
-
+    obj.updateObject(dt, len(home.popups))
     settings.update(dt, click_event, release_event, current_page)
 
 
@@ -187,7 +197,8 @@ while running:
         page_tracker += 1
         thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
-   
+    
+    
     tracker.update(dt, click_event, release_event, current_page, frame_surface)
  
     

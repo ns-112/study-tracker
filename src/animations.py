@@ -28,7 +28,9 @@ class object:
         self.surface = screen
         self.object = object
         self.object_copy = object
+        self.object_backup = object
         self.object_rect = pygame.Rect((BASE_POS[0] + origin[0]) - (object.get_rect()[2] / 2), (BASE_POS[1] + (-origin[1])) - (object.get_rect()[3] / 2), object.get_rect()[2], object.get_rect()[3])
+        self.object_rect_backup = self.object_rect
         self.is_button = is_button
         self.is_hovering = False
         self.l_mouse_down = False
@@ -103,7 +105,11 @@ class object:
             (x, y) = self.calculateTracks(system)
             x_offset += x
             y_offset += y
-        
+        for system in self.opacity:
+            self.animateSystem(deltaTime, system)
+            (x, y) = self.calculateTracks(system)
+            x_offset += x
+            y_offset += y
         if blit:
             self.surface.blit(self.object, (x_offset, y_offset))
         else:
@@ -189,7 +195,61 @@ class object:
 
                     
                 
-                
+    def warp_surface(self, surface, angle_x, angle_y):
+        width, height = surface.get_size()
+        src_rgb = pygame.surfarray.array3d(surface)
+        src_alpha = pygame.surfarray.array_alpha(surface)
+
+        # Create normalized coordinate grid
+        x = np.linspace(-1, 1, width)
+        y = -np.linspace(-1, 1, height)
+        xv, yv = np.meshgrid(x, y)
+        zv = np.zeros_like(xv)
+
+        # Rotation around X
+        rad_x = np.radians(angle_x)
+        yv_rot = yv * np.cos(rad_x) - zv * np.sin(rad_x)
+        zv = yv * np.sin(rad_x) + zv * np.cos(rad_x)
+
+        # Rotation around Y
+        rad_y = np.radians(angle_y)
+        xv_rot = xv * np.cos(rad_y) + zv * np.sin(rad_y)
+        zv = -xv * np.sin(rad_y) + zv * np.cos(rad_y)
+
+        # Perspective projection
+        fov = 5
+        zv_persp = zv + fov
+        xv_proj = xv_rot / zv_persp
+        yv_proj = yv_rot / zv_persp
+
+        # Normalize to pixel space
+        xv_px = ((xv_proj - xv_proj.min()) / (xv_proj.max() - xv_proj.min()) * (width - 1)).astype(np.int32)
+        yv_px = ((yv_proj - yv_proj.min()) / (yv_proj.max() - yv_proj.min()) * (height - 1)).astype(np.int32)
+
+        # Clamp to valid bounds
+        xv_px = np.clip(xv_px, 0, width - 1)
+        yv_px = np.clip(yv_px, 0, height - 1)
+
+        # Create a new surface
+        warped_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+
+        # Lock pixel arrays
+        warped_rgb = np.zeros((width, height, 3), dtype=np.uint8)
+        warped_alpha = np.zeros((width, height), dtype=np.uint8)
+
+        for y in range(height):
+            for x in range(width):
+                src_x = xv_px[y, x]
+                src_y = yv_px[y, x]
+                warped_rgb[x, y] = src_rgb[src_x, src_y]
+                warped_alpha[x, y] = src_alpha[src_x, src_y]
+
+        # Assign to surface
+        pygame.surfarray.blit_array(warped_surface, warped_rgb)
+        pygame.surfarray.pixels_alpha(warped_surface)[:, :] = warped_alpha
+
+        return warped_surface
+
 
         
         
@@ -210,7 +270,35 @@ class object:
             self.object = pygame.transform.smoothscale(self.object_copy, (self.object_copy.get_rect()[2] * system.value[0], self.object_copy.get_rect()[3] * system.value[1]))
             x += (self.object_copy.get_rect()[2] - self.object.get_rect()[2]) / 2
             y += (self.object_copy.get_rect()[3] - self.object.get_rect()[3]) / 2
+        elif system.anim_type == "r":
+            self.object = pygame.transform.rotate(self.object_copy, system.value[0])
             
+            x += (self.object_copy.get_rect()[2] - self.object.get_rect()[2]) / 2
+            y += (self.object_copy.get_rect()[3] - self.object.get_rect()[3]) / 2
+        elif system.anim_type == "sk":
+            if self.object_rect.collidepoint(pygame.mouse.get_pos()):
+                
+                self.object = self.warp_surface(self.object_copy, (pygame.mouse.get_pos()[0] - self.object_rect[0] - (self.object_rect[2] / 2)) * 1.25, (pygame.mouse.get_pos()[1] - self.object_rect[1] - (self.object_rect[3]) / 2) * 1.25)
+                
+
+                x += (pygame.mouse.get_pos()[0] - self.object_rect[0] - (self.object_rect[2] / 2)) / 10
+                y += (pygame.mouse.get_pos()[1] - self.object_rect[1] - (self.object_rect[3] / 2)) / 10
+                
+                
+                
+                
+                
+            
+                
+                
+
+                
+            else: 
+                self.object = self.object_backup
+                self.object_rect = self.object_rect_backup
+                
+        elif system.anim_type == "o":
+            pass
         
             
         

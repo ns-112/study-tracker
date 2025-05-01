@@ -23,8 +23,7 @@ def eyeDetection():
     start = time.time()
     while True:
         ret,frame = cam.read()
-        out = cv.VideoWriter('out.mp4',cv.VideoWriter_fourcc(*'mp4v'), 20.0,(640,480))
-        out.write(frame)
+        
 
         gray = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
         gray = cv.equalizeHist(gray)
