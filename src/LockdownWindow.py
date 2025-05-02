@@ -13,7 +13,7 @@ root.attributes("-fullscreen", True)
 root.resizable(False, False)
 
 
-root.bind("<q>", on_closing)
+#root.bind("<q>", on_closing)
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
 

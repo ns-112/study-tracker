@@ -20,7 +20,6 @@ def ease_out_back(t, s=1.70158):
 # Back-in easing
 def ease_in_back(t, s=1.70158):
     return t * t * ((s + 1) * t - s)
-
 WIDTH = 1280
 HEIGHT = 720
 window_anims = False
@@ -74,6 +73,7 @@ timeline.add_event(-1, "end_close") #set to -1 to unbind it
 stop = False
 frame = None
 frame_surface = None
+ld_toggle = False
 
 
 def capture_frames():
@@ -82,8 +82,6 @@ def capture_frames():
     global totalTime
     global timeStamps
     global timeStampLen
-    width = 640
-    height = 480
 
     for frame,distractedSeconds,totalTime,timeStamps,timeStampLen in detect.eyeDetection():
         if(stop):
@@ -116,7 +114,7 @@ def b_change_page():
     global current_page
     current_page = 1
 
-def b_start_demo():
+def b_tracking():
     global current_page
     current_page = 2
 
@@ -127,7 +125,11 @@ def b_home():
     stop = True
     global page_tracker
     page_tracker= 0
-  
+
+def b_lockdown():
+    global ld_toggle
+    ld_toggle = not ld_toggle
+
 
 #screens
 home = guie.gui_screen(screen, 0)
@@ -135,19 +137,15 @@ settings = guie.gui_screen(screen, 1)
 tracker = guie.gui_screen(screen, 2)
 
 
+
 #buttons
 home.create_static_texture("bg")
 home.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
-#home.buttons[0].animation_base.addAnimationTrack("sk", [[0, 0, 0], [1, 0, 0]])
 home.create_button(b_graph, "graph", (-400, 230))
-home.create_button(b_start_demo, "tracking", (0, 0))
-obj = anim.object(pygame.image.load(os.path.join(textures_dir, 'exit.png')).convert_alpha(), screen, (0, 0))
-obj.addAnimationTrack("sk", [[0, 1, 1], [3, 20, 0.4]], loop=True)
-
-
-#home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
-
-#settings.create_button(b_close, "exit", x = 25, y = 25)
+home.create_button(b_tracking, "tracking", (0, 0))
+#obj = anim.object(pygame.image.load(os.path.join(textures_dir, 'exit.png')).convert_alpha(), screen, (120, 0))
+#obj.addAnimationTrack("sk", [[0, 1, 1], [3, 20, 0.4]], loop=True)
+home.create_button(b_lockdown, "tick_empty", (150, 0), is_toggle = True, with_text = "lockdown mode")
 
 
 tracker.create_button(b_home, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
@@ -170,9 +168,6 @@ page_tracker = 0
 
 while running:
 
-    
-
-
     for event in pygame.event.get():
         if (event.type == pygame.MOUSEBUTTONDOWN and not click_event):
             click_event = True
@@ -186,21 +181,40 @@ while running:
         if (event.type == pygame.QUIT):
             running = False
 
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                current_page = 0
+                stop = True
+                screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA)
+                window.position = (BASE_POS[0], BASE_POS[1]) 
+            elif event.key == pygame.K_SPACE:
+                if os.path.exists("paused"):
+                    os.remove("paused")
+                else:
+                     f = open("paused", "w") 
 
-    home.update(dt, click_event, release_event, current_page)
-    obj.updateObject(dt, len(home.popups))
+
+    home.update(dt, click_event, release_event, current_page, toggle_states=[ld_toggle])
+    #obj.updateObject(dt, len(home.popups))
     settings.update(dt, click_event, release_event, current_page)
-
+    print(pygame.display.Info().current_w)
 
     if current_page == 2 and page_tracker == 0:
         
         page_tracker += 1
+
         thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
+        if ld_toggle:
+            screen = pygame.display.set_mode(pyautogui.size(), flags=pygame.RESIZABLE | pygame.SRCALPHA | pygame.NOFRAME) 
+            window.position = (0, 0)
+        else:
+            screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA)
+            window.position = (BASE_POS[0], BASE_POS[1]) 
     
     
     tracker.update(dt, click_event, release_event, current_page, frame_surface)
- 
+
     
     
     pygame.display.flip()
@@ -227,7 +241,7 @@ while running:
         opening = False
         if elapsed_time == 0:
             screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA) 
-            window.position = ( BASE_POS[0], BASE_POS[1])
+            window.position = (BASE_POS[0], BASE_POS[1])
         if commit_close and release_event:
             running = False
             closing = False
@@ -258,6 +272,8 @@ while running:
     
     elapsed_time += dt
     
-
-pygame.quit()
 stop = True
+if os.path.exists("paused"):
+    os.remove("paused")
+pygame.quit()
+

@@ -15,7 +15,9 @@ animation tracks which include
 keyframes
 '''
 class object:
-    def __init__(self, object, screen, origin = (0, 0), is_button = False, is_overlay = False):
+    def __init__(self, object, screen, origin = (0, 0), is_button = False, is_overlay = False, label = None, label_visibility = True):
+        self.label = label
+        self.show_label = label_visibility
         self.position = []
         self.scale = []    
         #todo   
@@ -112,6 +114,13 @@ class object:
             y_offset += y
         if blit:
             self.surface.blit(self.object, (x_offset, y_offset))
+            if self.label != None and self.show_label == True:
+               
+               
+                self.surface.blit(self.label, (self.object_rect[0] + (self.object_rect[0] - x_offset) + (self.object.get_size()[0]) + 10, self.object_rect_backup[1] + (self.object_rect_backup[3] / 2) - self.label.get_size()[1]/2))
+                
+               
+                
         else:
             return (x_offset, y_offset)
         
@@ -195,45 +204,40 @@ class object:
 
                     
                 
-    def warp_surface(self, surface, angle_x, angle_y):
+    def warp_surface(self, surface, angle_y, angle_x):
         width, height = surface.get_size()
         src_rgb = pygame.surfarray.array3d(surface)
         src_alpha = pygame.surfarray.array_alpha(surface)
 
-        # Create normalized coordinate grid
         x = np.linspace(-1, 1, width)
         y = -np.linspace(-1, 1, height)
         xv, yv = np.meshgrid(x, y)
         zv = np.zeros_like(xv)
 
-        # Rotation around X
         rad_x = np.radians(angle_x)
         yv_rot = yv * np.cos(rad_x) - zv * np.sin(rad_x)
         zv = yv * np.sin(rad_x) + zv * np.cos(rad_x)
 
-        # Rotation around Y
+       
         rad_y = np.radians(angle_y)
         xv_rot = xv * np.cos(rad_y) + zv * np.sin(rad_y)
         zv = -xv * np.sin(rad_y) + zv * np.cos(rad_y)
 
-        # Perspective projection
-        fov = 5
+        fov = 8
         zv_persp = zv + fov
         xv_proj = xv_rot / zv_persp
         yv_proj = yv_rot / zv_persp
 
-        # Normalize to pixel space
+  
         xv_px = ((xv_proj - xv_proj.min()) / (xv_proj.max() - xv_proj.min()) * (width - 1)).astype(np.int32)
         yv_px = ((yv_proj - yv_proj.min()) / (yv_proj.max() - yv_proj.min()) * (height - 1)).astype(np.int32)
 
-        # Clamp to valid bounds
+       
         xv_px = np.clip(xv_px, 0, width - 1)
         yv_px = np.clip(yv_px, 0, height - 1)
 
-        # Create a new surface
         warped_surface = pygame.Surface((width, height), pygame.SRCALPHA)
 
-        # Lock pixel arrays
         warped_rgb = np.zeros((width, height, 3), dtype=np.uint8)
         warped_alpha = np.zeros((width, height), dtype=np.uint8)
 
@@ -244,7 +248,7 @@ class object:
                 warped_rgb[x, y] = src_rgb[src_x, src_y]
                 warped_alpha[x, y] = src_alpha[src_x, src_y]
 
-        # Assign to surface
+     
         pygame.surfarray.blit_array(warped_surface, warped_rgb)
         pygame.surfarray.pixels_alpha(warped_surface)[:, :] = warped_alpha
 

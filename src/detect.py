@@ -18,10 +18,12 @@ def eyeDetection():
     timeStampStart = 0
     timeStampEnd = 0
     noFace = False
+    end = 0
 
 
     start = time.time()
-    while True:
+   
+    while not (os.path.exists("paused")):
         ret,frame = cam.read()
         
 
@@ -104,3 +106,10 @@ def eyeDetection():
         frame_rgb = np.flipud(frame_rgb)
         end = time.time()
         yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime,end-start,timeStamps, timeStampLen
+        while (os.path.exists("paused")):
+            ret,frame = cam.read()
+            cv.putText(frame, str(f"Paused"), (125, 100), 5, 2, (255, 255, 255), 2)
+            frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+            frame_rgb = np.rot90(frame_rgb)
+            frame_rgb = np.flipud(frame_rgb)
+            yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime,end-start,timeStamps, timeStampLen

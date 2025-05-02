@@ -12,14 +12,34 @@ textures_dir = os.path.join(project_dir, 'textures')
 data_dir = os.path.join(project_dir, "data")
 
 class button:
-    def __init__(self, texture, screen, callback, pos, animation_length, scale_to):
+    def __init__(self, texture, screen, callback, pos, animation_length, scale_to, toggle = False, extra_text = None):
+        
         self.hover = False
         self.callback = callback
         self.length = animation_length
         self.clicked = False
-        self.animation_base = anim.object(pygame.image.load(os.path.join(textures_dir, texture + '.png')).convert_alpha(), screen, pos, is_button = True)
+        surf = pygame.image.load(os.path.join(textures_dir, texture + '.png')).convert_alpha()
+
+        if extra_text != None:
+       
+            text = pygame.font.Font(None, 24).render(extra_text, True, (255, 255, 255))
+            
+            #pygame.Rect((1280/2 + pos[0]) - (surf.get_rect()[2] / 2), (720/2 + (-pos[1])) - (surf.get_rect()[3] / 2), surf.get_rect()[2], surf.get_rect()[3])
+        else:
+            text = None
+        
+        self.animation_base = anim.object(surf, screen, pos, is_button = True, label=text)
         self.animation_base.addAnimationTrack("s", [[0, 1, 1], [animation_length, scale_to, scale_to, "out_circ"], [0.05, scale_to - 0.1, scale_to - 0.1, "out_circ"]])
-        print(self.animation_base.scale.__str__())
+        if toggle == True:
+            self.toggle_on = pygame.image.load(os.path.join(textures_dir, "tick_filled" + '.png')).convert_alpha()
+            self.toggle_off = pygame.image.load(os.path.join(textures_dir, "tick_empty" + '.png')).convert_alpha()
+            self.toggle = toggle
+            
+        else:
+            self.toggle = False
+        
+        
+        #print(self.animation_base.scale.__str__())
         
 
 
@@ -41,7 +61,7 @@ class blank_popup:
         self.overlay = pygame.Surface((self.surface.get_width(), self.surface.get_height()), pygame.SRCALPHA)
         self.overlay.fill((0, 0, 0))
         self.overlay.set_alpha(0)
-        
+        self.data = None
         self.graph = []
     
     def create_button(
@@ -97,10 +117,12 @@ class gui_screen:
             pos = (0, 0),                      
             layout = (-1, -1),                
             scale = 1.15,                  
-            animation_length = 0.08     
+            animation_length = 0.08,
+            is_toggle = False,
+            with_text = None 
             ):
         
-        temp_button = button(texture, self.surface, callback, pos, animation_length, scale)
+        temp_button = button(texture, self.surface, callback, pos, animation_length, scale, is_toggle, extra_text=with_text)
         if (layout[0] != -1): #column
             if (len(self.buttons) > 0):
                 temp_button.animation_base.object_rect[0] = (((self.buttons[-1].animation_base.object_rect[2]) + self.buttons[-1].animation_base.object_rect[0]) * layout[0]) + 35
@@ -108,7 +130,7 @@ class gui_screen:
         if (layout[1] != -1): #row
             if (len(self.buttons) > 0):
                 temp_button.animation_base.object_rect[1] = (((self.buttons[-1].animation_base.object_rect[3]) + self.buttons[-1].animation_base.object_rect[1]) * layout[1]) + 35
-       
+        
             
         self.buttons.append(temp_button)
         
@@ -118,6 +140,7 @@ class gui_screen:
         
         if data != []:
             index = 0
+            tmp_popup.data = data
             for y in data:
                 dot = anim.object(pygame.image.load(os.path.join(textures_dir, 'dot.png')), self.surface, ((((700 // len(data)) * index) - 350), -100), False)
                 dot.addAnimationTrack("p", [[0, 0, 0], [0.25, 0, 0], [0.75, 0, (y * 2), "in_out_sine"]])
@@ -137,10 +160,11 @@ class gui_screen:
     
 
     
-    def update(self, deltatime, event1, event2, screen, frame = None, boxes = None):
+    def update(self, deltatime, event1, event2, screen, frame = None, boxes = None, toggle_states = []):
         
         if self.page == screen:
             active_popups = 0
+            
 
             for popup in self.popups:
                 if popup.active:
@@ -148,14 +172,26 @@ class gui_screen:
                 else:
                     break
             if (active_popups == 0):
-                
+                if toggle_states != []:
+                    for i in range(len(self.buttons)):
+                        if self.buttons[i].toggle:
+                            if toggle_states[0] == True:
+                                self.buttons[i].animation_base.object = pygame.image.load(os.path.join(textures_dir, "tick_filled" + '.png')).convert_alpha()
+                                self.buttons[i].animation_base.object_copy = self.buttons[i].animation_base.object
+                                self.buttons[i].animation_base.object_backup = self.buttons[i].animation_base.object
+                            else:
+                                self.buttons[i].animation_base.object = pygame.image.load(os.path.join(textures_dir, "tick_empty" + '.png')).convert_alpha()
+                                self.buttons[i].animation_base.object_copy = self.buttons[i].animation_base.object
+                                self.buttons[i].animation_base.object_backup = self.buttons[i].animation_base.object
                 for button in self.buttons:
+                    
+
                     if button.animation_base.object_rect.collidepoint(pygame.mouse.get_pos()) and self.active:
                         button.hover = True
                     else:
                         button.hover = False
                 
-
+                
 
                 for button in self.buttons:
                     if (button.hover and (event1 or button.clicked)):
@@ -190,6 +226,7 @@ class gui_screen:
             for popup in self.popups:
                 if popup.active:
                     
+                  
                     for button in popup.buttons:
                       
                         if button.animation_base.object_rect.collidepoint(pygame.mouse.get_pos()):
@@ -223,6 +260,9 @@ class gui_screen:
                         button.animation_base.updateObject(deltatime, active_popups)
                     index = 0
                     for point in popup.graph:
+                        if point.object.collidepoint(pygame.mouse.get_pos()):
+                            pass
+                            #show info label here
                         point.updateObject(deltatime, active_popups)
                         if index < len(popup.graph) - 1:
                             pygame.draw.line(self.surface, (255, 255, 255), (point.attributes[0][0] + (point.object_rect[2] // 2), point.attributes[0][1] + (point.object_rect[3] // 2)), (popup.graph[index + 1].attributes[0][0] + (popup.graph[index + 1].object_rect[2] // 2), popup.graph[index + 1].attributes[0][1] + (popup.graph[index + 1].object_rect[3] // 2)))
