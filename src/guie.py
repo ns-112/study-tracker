@@ -53,6 +53,7 @@ class blank_popup:
         self.origin = (x, y)
         self.surface = screen
         img = pygame.image.load(os.path.join(textures_dir, 'popup_blank.png')).convert_alpha()
+        self.img = img
         self.popup_animation_base = anim.object(img, screen, (x, y), is_button = False)
         #self.popup_animation_base.addAnimationTrack("s", [[0, 0, 0], [animation_length, scale_to, scale_to, "out_circ"], [0.05, 1, 1, "out_circ"]])
         #img_size = (img.get_height(), img.get_width())
@@ -260,9 +261,13 @@ class gui_screen:
                         button.animation_base.updateObject(deltatime, active_popups)
                     index = 0
                     for point in popup.graph:
-                        if point.object.collidepoint(pygame.mouse.get_pos()):
-                            pass
-                            #show info label here
+                        expanded_rect = pygame.Rect(point.object_rect[0] - (10), 0, point.object_rect[2] + 20, 1280)
+                        
+                        if expanded_rect.collidepoint(pygame.mouse.get_pos()):
+                            
+                            text = pygame.font.Font(None, 24).render(str(popup.data[index]), True, (255, 255, 255))
+                            self.surface.blit(text, (pygame.mouse.get_pos()[0] + (text.get_size()[0] // 2), pygame.mouse.get_pos()[1] - (text.get_size()[1] // 2)))
+                            pygame.draw.line(self.surface, (255, 255, 255), (pygame.mouse.get_pos()[0], (popup.img.get_size()[1] * 1.15) - 720 + 200), (pygame.mouse.get_pos()[0], (popup.img.get_size()[1] * 1.15)))
                         point.updateObject(deltatime, active_popups)
                         if index < len(popup.graph) - 1:
                             pygame.draw.line(self.surface, (255, 255, 255), (point.attributes[0][0] + (point.object_rect[2] // 2), point.attributes[0][1] + (point.object_rect[3] // 2)), (popup.graph[index + 1].attributes[0][0] + (popup.graph[index + 1].object_rect[2] // 2), popup.graph[index + 1].attributes[0][1] + (popup.graph[index + 1].object_rect[3] // 2)))

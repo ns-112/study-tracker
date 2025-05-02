@@ -115,8 +115,6 @@ class object:
         if blit:
             self.surface.blit(self.object, (x_offset, y_offset))
             if self.label != None and self.show_label == True:
-               
-               
                 self.surface.blit(self.label, (self.object_rect[0] + (self.object_rect[0] - x_offset) + (self.object.get_size()[0]) + 10, self.object_rect_backup[1] + (self.object_rect_backup[3] / 2) - self.label.get_size()[1]/2))
                 
                

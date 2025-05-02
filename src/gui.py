@@ -125,6 +125,9 @@ def b_home():
     stop = True
     global page_tracker
     page_tracker= 0
+    global screen
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA)
+    window.position = (BASE_POS[0], BASE_POS[1]) 
 
 def b_lockdown():
     global ld_toggle
@@ -141,7 +144,7 @@ tracker = guie.gui_screen(screen, 2)
 #buttons
 home.create_static_texture("bg")
 home.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
-home.create_button(b_graph, "graph", (-400, 230))
+home.create_button(b_graph, "graph", (-300, 0))
 home.create_button(b_tracking, "tracking", (0, 0))
 #obj = anim.object(pygame.image.load(os.path.join(textures_dir, 'exit.png')).convert_alpha(), screen, (120, 0))
 #obj.addAnimationTrack("sk", [[0, 1, 1], [3, 20, 0.4]], loop=True)
@@ -197,7 +200,7 @@ while running:
     home.update(dt, click_event, release_event, current_page, toggle_states=[ld_toggle])
     #obj.updateObject(dt, len(home.popups))
     settings.update(dt, click_event, release_event, current_page)
-    print(pygame.display.Info().current_w)
+
 
     if current_page == 2 and page_tracker == 0:
         
