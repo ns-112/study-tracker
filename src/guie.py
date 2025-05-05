@@ -292,13 +292,13 @@ class gui_screen:
                     index = 0
                     for point in popup.graph:
                         expanded_rect = pygame.Rect(point.object_rect[0] - (10), 0, point.object_rect[2] + 20, 640)
-                        shrunk_rect = pygame.Rect(popup.popup_animation_base.object_rect[0] + popup.popup_animation_base.object_rect[0] / 2, popup.popup_animation_base.object_rect[1] / 2 - popup.popup_animation_base.object_rect[1], popup.popup_animation_base.object_rect[2] / 2, popup.popup_animation_base.object_rect[3] / 2)
+                        
                         if expanded_rect.collidepoint(pygame.mouse.get_pos()):
                             
                             text = pygame.font.Font(None, 24).render(str(popup.data[index]), True, (255, 255, 255))
                             self.surface.blit(text, (pygame.mouse.get_pos()[0] + (text.get_size()[0] // 2), pygame.mouse.get_pos()[1] - (text.get_size()[1] // 2)))
                             
-                        if shrunk_rect.collidepoint(pygame.mouse.get_pos()):
+                        if popup.popup_animation_base.object_rect.collidepoint(pygame.mouse.get_pos()):
                             pygame.draw.line(self.surface, (255, 255, 255), (pygame.mouse.get_pos()[0], (popup.img.get_size()[1] / 2)), pygame.mouse.get_pos())
                         point.updateObject(deltatime, active_popups)
                         if index < len(popup.graph) - 1:
