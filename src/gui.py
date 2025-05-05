@@ -213,9 +213,11 @@ while running:
             elif event.key == pygame.K_SPACE:
                 
                 if os.path.exists("paused"):
+                    pause = False
                     f.close()
                     os.remove("paused")
                 else:
+                     pause = True
                      f = open("paused", "w") 
 
 
@@ -249,14 +251,15 @@ while running:
         if lwk_mode and page_tracker == 1:
             page_tracker += 1
             print("starting session")
-        tracker_time += dt
+        if not pause:
+            tracker_time += dt
     else:
         tracker_time = 0
-    if pause == False:
-        pygame.display.flip()
+
+    pygame.display.flip()
 
         
-        dt = clock.tick(60) / 1000
+    dt = clock.tick(60) / 1000
 
     #opening and closing animation
     
