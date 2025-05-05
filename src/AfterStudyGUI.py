@@ -13,6 +13,8 @@ from datetime import datetime
 
 
 root = tk.Tk()
+root.title ("Study Tracker")
+root.state("zoomed")
 frame = tk.Frame(root)
 left_frame = tk.Frame(frame, width = 500, height=600) 
 right_frame = tk.Frame(frame, width = 500, height=600) 
