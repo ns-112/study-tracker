@@ -1,3 +1,3 @@
-from gui import distractedSecondss, totalTime, timeStamps, timeStampLen
+from gui import distractedSeconds, totalTime, timeStamps, timeStampLen
 import AfterStudyGUI
-AfterStudyGUI.Graph(distractedSecondss, totalTime, timeStamps, timeStampLen)
+AfterStudyGUI.Graph(distractedSeconds, totalTime, timeStamps, timeStampLen)

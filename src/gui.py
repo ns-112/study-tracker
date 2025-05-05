@@ -10,34 +10,26 @@ import detect
 from detect import eyeDetection
 import threading
 import json
+import animations as anim
+import AfterStudyGUI
+import time
 
-# Outback easing
-def ease_out_back(t, s=1.70158):
-    t -= 1
-    return (t * t * ((s + 1) * t + s) + 1)
 
-# Back-in easing
-def ease_in_back(t, s=1.70158):
-    return t * t * ((s + 1) * t - s)
-
-WIDTH = 1280
-HEIGHT = 720
+WIDTH = 640
+HEIGHT = 360
 window_anims = False
 BASE_POS = (pyautogui.size().width // 2 - (WIDTH / 2), (pyautogui.size().height // 2) - (HEIGHT / 2))
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
+textures_dir = os.path.join(project_dir, 'textures')
 
 pygame.init()
 screen = pygame.display.set_mode((0, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA) 
 window = Window.from_display_module()
 clock = pygame.time.Clock()
 
-
-with open(os.path.join(project_dir, 'data', 'plot.json'), 'r') as file:
-    python_dict = json.load(file)
-
-graph_1_data = python_dict['y']
+pygame.display.set_caption("Study Tracker")
 
 
     
@@ -74,24 +66,37 @@ frame = None
 frame_surface = None
 
 
+ld_toggle = False
+lwk_mode = False
+
+
+tracker_time = 0
+
+
+pause = False
+
+totalTime = 0
+
+
+
 def capture_frames():
     global frame_surface
-    global distractedSecondss
+    global distractedSeconds
     global totalTime
     global timeStamps
     global timeStampLen
-    width = 640
-    height = 480
 
     for frame,distractedSeconds,totalTime,timeStamps,timeStampLen in detect.eyeDetection():
-        if(stop):
-            break
-
+        
         frame_surface = frame
-        distractedSecondss = distractedSeconds
+        distractedSeconds = distractedSeconds
         totalTime = totalTime
         timeStampLen = timeStampLen
         timeStamps = timeStamps
+        if(stop):
+            
+            break
+    
 
 #button callbacks
 def b_close():
@@ -103,8 +108,10 @@ def b_close():
         commit_close = True
 
 def b_graph():
-    print("popup")
-    home.create_graph_popup(graph_1_data)
+
+    with open(os.path.join(project_dir, 'data', 'plot.json'), 'r') as file:
+        python_dict = json.load(file)
+    home.create_graph_popup(python_dict['y'])
 
 def b_generic():
     print("button clicked")
@@ -114,10 +121,37 @@ def b_change_page():
     global current_page
     current_page = 1
 
-def b_start_demo():
+def b_tracking():
     global current_page
     current_page = 2
-  
+
+def b_home():
+    global totalTime
+    if totalTime != 0:
+        global current_page
+        current_page = 0
+        global stop
+        stop = True
+        global page_tracker
+        page_tracker= 0
+        global screen
+        screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA)
+        window.position = (BASE_POS[0], BASE_POS[1]) 
+        
+        
+
+
+
+def b_lockdown():
+    global ld_toggle
+    ld_toggle = not ld_toggle
+
+def b_lwkmode():
+    global lwk_mode
+    lwk_mode = not lwk_mode
+
+
+
 
 #screens
 home = guie.gui_screen(screen, 0)
@@ -125,20 +159,18 @@ settings = guie.gui_screen(screen, 1)
 tracker = guie.gui_screen(screen, 2)
 
 
+
 #buttons
 home.create_static_texture("bg")
 home.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
-home.create_button(b_graph, "graph", (-400, 230))
-home.create_button(b_start_demo, "tracking", (0,0))
+home.create_button(b_graph, "graph", (-(WIDTH / 2) + 200, 0))
+home.create_button(b_tracking, "tracking", (160, -70))
 
+home.create_button(b_lockdown, "tick_empty", (80, 0), is_toggle = True, with_text = "lockdown mode")
+home.create_button(b_lwkmode, "tick_empty", (80, 70), is_toggle = True, with_text = "hidden mode")
 
-
-#home.create_button(b_start_demo, "tracking", x = (pyautogui.size().width // 2) - (WIDTH / 3), y = (pyautogui.size().height // 2) - (HEIGHT / 3))
-
-#settings.create_button(b_close, "exit", x = 25, y = 25)
-
-
-tracker.create_button(b_close, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
+tracker.create_button(b_home, "exit", (-(WIDTH / 2) + 35, (HEIGHT / 2) - 35))
+tracker.create_label("Study Session:", (0,  (HEIGHT / 2) - 20), does_change = True, data = tracker_time)
 
 
 
@@ -156,12 +188,7 @@ page_tracker = 0
 
 
 
-
-
 while running:
-
-    
-
 
     for event in pygame.event.get():
         if (event.type == pygame.MOUSEBUTTONDOWN and not click_event):
@@ -176,70 +203,74 @@ while running:
         if (event.type == pygame.QUIT):
             running = False
 
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                if lwk_mode:
+                    b_home()
+                    screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA)
+                    window.position = (BASE_POS[0], BASE_POS[1]) 
 
-    home.update(dt, click_event, release_event, current_page)
+            elif event.key == pygame.K_SPACE:
+                if os.path.exists("paused"):
+                    os.remove("paused")
+                else:
+                     f = open("paused", "w") 
 
+
+    home.update(dt, click_event, release_event, current_page, toggle_states=[ld_toggle, lwk_mode])
     settings.update(dt, click_event, release_event, current_page)
 
 
     if current_page == 2 and page_tracker == 0:
         
         page_tracker += 1
+
         thread = threading.Thread(target=capture_frames, daemon=True)
         thread.start()
-   
+        if ld_toggle and not lwk_mode:
+            del tracker.labels[0]
+            screen = pygame.display.set_mode(pyautogui.size(), flags=pygame.RESIZABLE | pygame.SRCALPHA | pygame.NOFRAME) 
+            window.position = (0, 0)
+            tracker.create_label("Study Session:", (0,  (pyautogui.size().height / 2) - 20), does_change = True, data = tracker_time)
+        elif lwk_mode and not ld_toggle:
+            screen = pygame.display.set_mode((1, 1), flags=pygame.RESIZABLE | pygame.SRCALPHA | pygame.NOFRAME) 
+            window.position = (0, 0)
+        else:
+            screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA)
+            window.position = (BASE_POS[0], BASE_POS[1]) 
+       
+    
     tracker.update(dt, click_event, release_event, current_page, frame_surface)
- 
-    
-    
-    pygame.display.flip()
-    dt = clock.tick(60) / 1000
+    tracker.labels[0].update_data(tracker_time)
+
+    if current_page == 2 and totalTime != 0:
+        if lwk_mode and page_tracker == 1:
+            page_tracker += 1
+            print("starting session")
+        tracker_time += dt
+    else:
+        tracker_time = 0
+    if pause == False:
+        pygame.display.flip()
+
+        
+        dt = clock.tick(60) / 1000
 
     #opening and closing animation
     
     if (window_anims):
-        if (elapsed_time >= timeline.events["start_open"] and elapsed_time <= timeline.events["end_open"]):
-            opening = True
-            transition_time += dt
-        elif (elapsed_time > timeline.events["end_open"] and not commit_close):
-            opening = False
-            transition_time = 0
-        
-        if (elapsed_time >= timeline.events["start_close"] and elapsed_time <= timeline.events["end_close"] and commit_close and release_event):
-            
-            closing = True
-            transition_time += dt
-        elif(elapsed_time > timeline.events["end_close"] and timeline.events["start_close"] != -1):
-            closing = False
-            transition_time = 0
+        pass
     else:
         opening = False
         if elapsed_time == 0:
             screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.RESIZABLE | pygame.SRCALPHA) 
-            window.position = ( BASE_POS[0], BASE_POS[1])
+            window.position = (BASE_POS[0], BASE_POS[1])
         if commit_close and release_event:
             running = False
             closing = False
         
     
 
-    if closing: 
-        t = min(transition_time / (timeline.events["end_close"] - timeline.events["start_close"]), 1)
-        x = int((1 - ease_in_back(t)) * WIDTH)
-        if (abs(t + 0.03) >= 1): 
-            x = 0
-        window.size = (x + 1, HEIGHT)
-        window.position = (pyautogui.size().width // 2 - (x / 2), BASE_POS[1])
-        if (x == 0):
-            running = False  
-        
-        
-
-    if opening:
-        t = min(transition_time / (timeline.events["end_open"] - timeline.events["start_open"]), 1)  
-        x = int(ease_out_back(t) * WIDTH)
-        window.size = (x, HEIGHT)
-        window.position = (pyautogui.size().width // 2 - (x / 2), BASE_POS[1])
     
     if (elapsed_time > timeline.events["end_close"] + 1 and commit_close and release_event):
             print("closing failed due to unknown reason. forced close automatically.")
@@ -247,6 +278,8 @@ while running:
     
     elapsed_time += dt
     
-
-pygame.quit()
 stop = True
+if os.path.exists("paused"):
+    os.remove("paused")
+pygame.quit()
+

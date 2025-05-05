@@ -4,9 +4,9 @@ import pygame
 
 
 #fix this to be dynamic
-WIDTH = 1280
-HEIGHT = 720
-BASE_POS = (WIDTH // 2, HEIGHT // 2)
+WIDTH = 640
+HEIGHT = 360
+BASE_POS = (WIDTH / 2, HEIGHT / 2)
 print(BASE_POS)
 
 '''
@@ -15,23 +15,28 @@ animation tracks which include
 keyframes
 '''
 class object:
-    def __init__(self, object, screen, origin = (0, 0), is_button = False, is_overlay = False):
+    def __init__(self, object, screen, origin = (0, 0), is_button = False, is_overlay = False, label = None, label_visibility = True, does_change = False):
+        self.label = label
+        self.show_label = label_visibility
         self.position = []
         self.scale = []    
         #todo   
         self.rotation = []
         #todo maybe
         self.skew = []
-        
+        self.swap_obj = does_change
         self.opacity = []
         self.attributes = [(0, 0), (0, 0)]
         self.surface = screen
         self.object = object
         self.object_copy = object
+        self.object_backup = object
         self.object_rect = pygame.Rect((BASE_POS[0] + origin[0]) - (object.get_rect()[2] / 2), (BASE_POS[1] + (-origin[1])) - (object.get_rect()[3] / 2), object.get_rect()[2], object.get_rect()[3])
+        self.object_rect_backup = self.object_rect
         self.is_button = is_button
         self.is_hovering = False
         self.l_mouse_down = False
+        self.base_origin = origin
 
     '''
     create and append new animation track
@@ -61,12 +66,14 @@ class object:
     main function to call that updates keyframe values
     and renders object to screen
     '''
-    def updateObject(self, deltaTime, active_popups, blit = True):
+    def updateObject(self, deltaTime, active_popups, blit = True, new_surface = None):
         
+       
         x_offset = self.object_rect[0]
         y_offset = self.object_rect[1]
         x = 0
         y = 0
+        
         if self.is_button:
             if active_popups == 0:
                 if (self.object_rect.collidepoint(pygame.mouse.get_pos())):
@@ -103,11 +110,33 @@ class object:
             (x, y) = self.calculateTracks(system)
             x_offset += x
             y_offset += y
-        
+        for system in self.opacity:
+            self.animateSystem(deltaTime, system)
+            (x, y) = self.calculateTracks(system)
+            x_offset += x
+            y_offset += y
         if blit:
+            
             self.surface.blit(self.object, (x_offset, y_offset))
+            if self.label != None and self.show_label == True:
+                self.surface.blit(self.label, (self.object_rect[0] + (self.object_rect[0] - x_offset) + (self.object.get_size()[0]) + 10, self.object_rect_backup[1] + (self.object_rect_backup[3] / 2) - self.label.get_size()[1]/2))
+                
+               
+                
         else:
             return (x_offset, y_offset)
+        
+    '''
+    only works if self.swap_obj is True
+    '''
+    def update_surface(self, new_surface):
+        if self.swap_obj:
+            self.object_copy = new_surface
+            self.object_backup = new_surface
+            self.object = new_surface
+            self.object_rect = pygame.Rect((BASE_POS[0] + self.base_origin[0]) - (new_surface.get_rect()[2] / 2), (BASE_POS[1] + (-self.base_origin[1])) - (new_surface.get_rect()[3] / 2), new_surface.get_rect()[2], new_surface.get_rect()[3])
+            self.object_rect_backup = self.object_rect
+
         
     '''
     update/linearly interpolate values based on keyframe's settings
@@ -189,7 +218,7 @@ class object:
 
                     
                 
-                
+    
 
         
         
@@ -210,7 +239,36 @@ class object:
             self.object = pygame.transform.smoothscale(self.object_copy, (self.object_copy.get_rect()[2] * system.value[0], self.object_copy.get_rect()[3] * system.value[1]))
             x += (self.object_copy.get_rect()[2] - self.object.get_rect()[2]) / 2
             y += (self.object_copy.get_rect()[3] - self.object.get_rect()[3]) / 2
+        elif system.anim_type == "r":
+            self.object = pygame.transform.rotate(self.object_copy, system.value[0])
             
+            x += (self.object_copy.get_rect()[2] - self.object.get_rect()[2]) / 2
+            y += (self.object_copy.get_rect()[3] - self.object.get_rect()[3]) / 2
+        elif system.anim_type == "sk":
+            #unused
+            if self.object_rect.collidepoint(pygame.mouse.get_pos()):
+                
+                #self.object = self.warp_surface(self.object_copy, (pygame.mouse.get_pos()[0] - self.object_rect[0] - (self.object_rect[2] / 2)) * 1.25, (pygame.mouse.get_pos()[1] - self.object_rect[1] - (self.object_rect[3]) / 2) * 1.25)
+                
+
+                x += (pygame.mouse.get_pos()[0] - self.object_rect[0] - (self.object_rect[2] / 2)) / 10
+                y += (pygame.mouse.get_pos()[1] - self.object_rect[1] - (self.object_rect[3] / 2)) / 10
+                
+                
+                
+                
+                
+            
+                
+                
+
+                
+            else: 
+                self.object = self.object_backup
+                self.object_rect = self.object_rect_backup
+                
+        elif system.anim_type == "o":
+            pass
         
             
         
