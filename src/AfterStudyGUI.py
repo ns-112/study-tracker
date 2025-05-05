@@ -7,6 +7,8 @@ from functools import reduce
 from functools import partial
 import math
 
+import json
+
 from datetime import datetime
 
 
@@ -54,7 +56,7 @@ def combine(x,y):
     return x + "\n" + y
 
 def Graph(disTime,totTime,stamps,stamplen):
-    update_log_display()
+    
     focusedPer=(((totTime-disTime)/totTime) * 100)
     disPer = (disTime / totTime) * 100
 
@@ -100,10 +102,12 @@ def Graph(disTime,totTime,stamps,stamplen):
     log_display_label.pack(pady=(10, 5))
 
     log_text.pack(pady=5)
-    
+    update_log_display()
     canvas = FigureCanvasTkAgg(fig, master=left_frame)
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
     root.mainloop()
+
 
 
 

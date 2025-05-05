@@ -34,7 +34,7 @@ def eyeDetection():
         height,width, _= frame.shape
         if(noFace):
             if (noFace and len(faces) == 0):
-                cv.putText(frame, str("No Face Detected"), (125, 400), 5, 2, (255, 255, 255), 2)
+                cv.putText(frame, str("No Face Detected"), (0, 400), 5, 2, (255, 255, 255), 2)
                 unfocusedTime += 0.1
                 sleep(0.1)
             else: 
@@ -48,7 +48,7 @@ def eyeDetection():
 
 
         elif (len(faces) == 0):
-            cv.putText(frame, str("No Face Detected"), (125, 400), 5, 2, (255, 255, 255), 2)
+            cv.putText(frame, str("No Face Detected"), (0, 400), 5, 2, (255, 255, 255), 2)
             noFace = True
             timeStampStart = time.time()
         
@@ -100,16 +100,20 @@ def eyeDetection():
                 timeStampStart = time.time()
 
 
-        cv.putText(frame, str(f"Unfocused Time: {unfocusedTime}"), (125, 100), 5, 2, (255, 255, 255), 2)
+        cv.putText(frame, str(f"Unfocused Time: {unfocusedTime}"), (0, 100), 5, 2, (255, 255, 255), 2)
+        
         frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
         frame_rgb = np.rot90(frame_rgb)
         frame_rgb = np.flipud(frame_rgb)
+        frame_rgb = cv.resize(frame_rgb, (180, 320))
         end = time.time()
         yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime,end-start,timeStamps, timeStampLen
         while (os.path.exists("paused")):
             ret,frame = cam.read()
-            cv.putText(frame, str(f"Paused"), (125, 100), 5, 2, (255, 255, 255), 2)
+            cv.putText(frame, str(f"Paused"), (0, 100), 5, 2, (255, 255, 255), 2)
+            
             frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
             frame_rgb = np.rot90(frame_rgb)
             frame_rgb = np.flipud(frame_rgb)
+            frame_rgb = cv.resize(frame_rgb, (180, 320))
             yield pygame.surfarray.make_surface(frame_rgb),unfocusedTime,end-start,timeStamps, timeStampLen

@@ -4,9 +4,9 @@ import pygame
 
 
 #fix this to be dynamic
-WIDTH = 1280
-HEIGHT = 720
-BASE_POS = (WIDTH // 2, HEIGHT // 2)
+WIDTH = 640
+HEIGHT = 360
+BASE_POS = (WIDTH / 2, HEIGHT / 2)
 print(BASE_POS)
 
 '''
@@ -15,7 +15,7 @@ animation tracks which include
 keyframes
 '''
 class object:
-    def __init__(self, object, screen, origin = (0, 0), is_button = False, is_overlay = False, label = None, label_visibility = True):
+    def __init__(self, object, screen, origin = (0, 0), is_button = False, is_overlay = False, label = None, label_visibility = True, does_change = False):
         self.label = label
         self.show_label = label_visibility
         self.position = []
@@ -24,7 +24,7 @@ class object:
         self.rotation = []
         #todo maybe
         self.skew = []
-        
+        self.swap_obj = does_change
         self.opacity = []
         self.attributes = [(0, 0), (0, 0)]
         self.surface = screen
@@ -36,6 +36,7 @@ class object:
         self.is_button = is_button
         self.is_hovering = False
         self.l_mouse_down = False
+        self.base_origin = origin
 
     '''
     create and append new animation track
@@ -65,12 +66,14 @@ class object:
     main function to call that updates keyframe values
     and renders object to screen
     '''
-    def updateObject(self, deltaTime, active_popups, blit = True):
+    def updateObject(self, deltaTime, active_popups, blit = True, new_surface = None):
         
+       
         x_offset = self.object_rect[0]
         y_offset = self.object_rect[1]
         x = 0
         y = 0
+        
         if self.is_button:
             if active_popups == 0:
                 if (self.object_rect.collidepoint(pygame.mouse.get_pos())):
@@ -113,6 +116,7 @@ class object:
             x_offset += x
             y_offset += y
         if blit:
+            
             self.surface.blit(self.object, (x_offset, y_offset))
             if self.label != None and self.show_label == True:
                 self.surface.blit(self.label, (self.object_rect[0] + (self.object_rect[0] - x_offset) + (self.object.get_size()[0]) + 10, self.object_rect_backup[1] + (self.object_rect_backup[3] / 2) - self.label.get_size()[1]/2))
@@ -121,6 +125,18 @@ class object:
                 
         else:
             return (x_offset, y_offset)
+        
+    '''
+    only works if self.swap_obj is True
+    '''
+    def update_surface(self, new_surface):
+        if self.swap_obj:
+            self.object_copy = new_surface
+            self.object_backup = new_surface
+            self.object = new_surface
+            self.object_rect = pygame.Rect((BASE_POS[0] + self.base_origin[0]) - (new_surface.get_rect()[2] / 2), (BASE_POS[1] + (-self.base_origin[1])) - (new_surface.get_rect()[3] / 2), new_surface.get_rect()[2], new_surface.get_rect()[3])
+            self.object_rect_backup = self.object_rect
+
         
     '''
     update/linearly interpolate values based on keyframe's settings
@@ -202,56 +218,7 @@ class object:
 
                     
                 
-    def warp_surface(self, surface, angle_y, angle_x):
-        width, height = surface.get_size()
-        src_rgb = pygame.surfarray.array3d(surface)
-        src_alpha = pygame.surfarray.array_alpha(surface)
-
-        x = np.linspace(-1, 1, width)
-        y = -np.linspace(-1, 1, height)
-        xv, yv = np.meshgrid(x, y)
-        zv = np.zeros_like(xv)
-
-        rad_x = np.radians(angle_x)
-        yv_rot = yv * np.cos(rad_x) - zv * np.sin(rad_x)
-        zv = yv * np.sin(rad_x) + zv * np.cos(rad_x)
-
-       
-        rad_y = np.radians(angle_y)
-        xv_rot = xv * np.cos(rad_y) + zv * np.sin(rad_y)
-        zv = -xv * np.sin(rad_y) + zv * np.cos(rad_y)
-
-        fov = 8
-        zv_persp = zv + fov
-        xv_proj = xv_rot / zv_persp
-        yv_proj = yv_rot / zv_persp
-
-  
-        xv_px = ((xv_proj - xv_proj.min()) / (xv_proj.max() - xv_proj.min()) * (width - 1)).astype(np.int32)
-        yv_px = ((yv_proj - yv_proj.min()) / (yv_proj.max() - yv_proj.min()) * (height - 1)).astype(np.int32)
-
-       
-        xv_px = np.clip(xv_px, 0, width - 1)
-        yv_px = np.clip(yv_px, 0, height - 1)
-
-        warped_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-
-        warped_rgb = np.zeros((width, height, 3), dtype=np.uint8)
-        warped_alpha = np.zeros((width, height), dtype=np.uint8)
-
-        for y in range(height):
-            for x in range(width):
-                src_x = xv_px[y, x]
-                src_y = yv_px[y, x]
-                warped_rgb[x, y] = src_rgb[src_x, src_y]
-                warped_alpha[x, y] = src_alpha[src_x, src_y]
-
-     
-        pygame.surfarray.blit_array(warped_surface, warped_rgb)
-        pygame.surfarray.pixels_alpha(warped_surface)[:, :] = warped_alpha
-
-        return warped_surface
-
+    
 
         
         
@@ -278,9 +245,10 @@ class object:
             x += (self.object_copy.get_rect()[2] - self.object.get_rect()[2]) / 2
             y += (self.object_copy.get_rect()[3] - self.object.get_rect()[3]) / 2
         elif system.anim_type == "sk":
+            #unused
             if self.object_rect.collidepoint(pygame.mouse.get_pos()):
                 
-                self.object = self.warp_surface(self.object_copy, (pygame.mouse.get_pos()[0] - self.object_rect[0] - (self.object_rect[2] / 2)) * 1.25, (pygame.mouse.get_pos()[1] - self.object_rect[1] - (self.object_rect[3]) / 2) * 1.25)
+                #self.object = self.warp_surface(self.object_copy, (pygame.mouse.get_pos()[0] - self.object_rect[0] - (self.object_rect[2] / 2)) * 1.25, (pygame.mouse.get_pos()[1] - self.object_rect[1] - (self.object_rect[3]) / 2) * 1.25)
                 
 
                 x += (pygame.mouse.get_pos()[0] - self.object_rect[0] - (self.object_rect[2] / 2)) / 10
