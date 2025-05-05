@@ -211,7 +211,9 @@ while running:
                     window.position = (BASE_POS[0], BASE_POS[1]) 
 
             elif event.key == pygame.K_SPACE:
+                
                 if os.path.exists("paused"):
+                    f.close()
                     os.remove("paused")
                 else:
                      f = open("paused", "w") 
