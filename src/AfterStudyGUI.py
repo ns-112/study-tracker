@@ -19,6 +19,16 @@ study_entry = tk.Entry(right_frame, width=50, font=("Arial", 12))
 confirmation_label = tk.Label(right_frame, text="", font=("Arial", 10))
 log_text = tk.Text(right_frame, height=10, width=60, font=("Courier New", 10), wrap="word")
 
+def get_study_recommendation(focus_percent, distractions):
+    if focus_percent > 90:
+        return "Great job! You stayed super focused."
+    elif focus_percent > 70:
+        return "Good session, but try to reduce distractions next time."
+    elif focus_percent > 50:
+        return "You got some good work done, but consider different studying techniques"
+    else:
+        return "Try shorter sessions with breaks, or put your phone away to stay on track."
+    
 def log_study(timeStamps,totTime):
     topic = study_entry.get()
     distractions = len(timeStamps)
@@ -61,14 +71,23 @@ def Graph(disTime,totTime,stamps,stamplen):
     log_button = tk.Button(right_frame, text="Log Study Session", command=partial(log_study, stamplen, round(totTime)))
     
     root.title ("Study Tracker")
+    #root.state('zoomed')
     root.geometry("1000x600")
-    
+    top_label = tk.Label(root, text = "Study Overview")
+    top_label.pack(side=tk.TOP, pady=(10,5))
+
     frame.pack(fill=tk.BOTH, expand = True)
     
     left_frame.pack(side=tk.LEFT, fill = tk.BOTH, expand = True)
     
     right_frame.pack(side=tk.RIGHT, fill = tk.BOTH, expand = True)
-    
+
+    label = tk.Label(right_frame, text="Study Recommendations")
+    label.pack(pady=50)
+    recommendation = get_study_recommendation(focusedPer, len(stamplen))
+    rec_label = tk.Label(right_frame, text=recommendation, font=("Arial", 12), fg="blue", wraplength=400, justify="left")
+    rec_label.pack(pady=(5, 20))
+
     study_label.pack(pady=(20, 5))
 
     study_entry.pack(pady=5)
@@ -79,21 +98,19 @@ def Graph(disTime,totTime,stamps,stamplen):
     labels = ['Study', 'Distracted']
     sizes = [focusedPer, disPer]  
     colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99']
-    time_label = [ f"{x}, Period:{stamps[x]}s, Duration:{stamplen[x]}s" for x in stamps]
-    time_label = reduce(combine, time_label)
-    time_label = tk.Label(root, text = f"Timestamps:\n {time_label}")
-    time_label.pack(pady=100)
+    # Create the timestamp label text
+    time_label_list = [f"{x}, Period: {stamps[x]}s, Duration: {stamplen[x]}s" for x in stamps]
+
+    if time_label_list:
+        time_label_text = reduce(combine, time_label_list)
+    else:
+        time_label_text = "No distractions recorded."
+
     
     fig, ax = plt.subplots(figsize=(5, 3))  #Adjust size of the pie chart
     ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
     ax.axis('equal') #makes sure our pi chart is a circle according to aspect ratio
-    
-    
-    label = tk.Label(right_frame, text="Study Recommendations")
-    label.pack(pady=50)
-    
-    top_label = tk.Label(root, text = "Study Overview")
-    top_label.pack(side=tk.TOP, pady=20)
+
     log_button.pack(pady=(0, 10))
 
     log_display_label = tk.Label(right_frame, text="Logged Sessions:", font=("Arial", 14, "bold"))
@@ -103,6 +120,10 @@ def Graph(disTime,totTime,stamps,stamplen):
     
     canvas = FigureCanvasTkAgg(fig, master=left_frame)
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    time_label = tk.Label(right_frame, text=f"Timestamps:\n{time_label_text}", justify="left", anchor="w", font=("Courier New", 10), wraplength=400)
+    time_heading = tk.Label(right_frame, text="Distraction Timestamps:", font=("Arial", 12, "bold"))
+    time_heading.pack(pady=(10, 5))
+    time_label.pack(pady=(10,20))
     root.mainloop()
 
 
